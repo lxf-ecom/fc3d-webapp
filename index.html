@@ -185,6 +185,9 @@ background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:15px;fon
 .chart2-acc-item .acc-val{color:var(--grn);font-weight:600}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="ctr">
@@ -341,7 +344,7 @@ background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:15px;fon
         1. 本工具仅供数据分析研究参考，不构成任何投注建议或诱导行为。<br>
         2. 历史数据表现不代表未来结果，请理性对待。<br>
         3. <strong style="color:var(--org)">本服务仅面向年满18周岁的成年人，不向未成年人提供任何服务。</strong><br>
-        4. 用户需完成实名认证方可使用VIP功能，认证时需确认年龄已满18周岁。<br>
+        4. VIP功能需注册账号后由管理员开通，具体请联系峰哥。<br>
         5. 任何基于本工具数据做出的决策，责任由用户自行承担。<br>
         6. 如发现未成年人使用本服务，我们将立即终止其账号。
     </div>
@@ -353,11 +356,11 @@ background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:15px;fon
         <button class="close-btn" onclick="hideModal()">&times;</button>
         <h2 id="modalTitle">登录</h2>
         <div class="modal-sub" id="modalSub">登录后查看全部分析数据</div>
-        <label>手机号</label>
-        <input type="tel" id="authPhone" placeholder="请输入手机号" maxlength="11">
-        <div class="error-msg" id="phoneErr">请输入正确的11位手机号</div>
+        <label>邮箱</label>
+        <input type="email" id="authEmail" placeholder="请输入邮箱地址">
+        <div class="error-msg" id="emailErr">请输入正确的邮箱地址</div>
         <label>密码</label>
-        <input type="password" id="authPwd" placeholder="请输入密码" maxlength="20">
+        <input type="password" id="authPwd" placeholder="请输入密码（至少6位）" maxlength="30">
         <div class="error-msg" id="pwdErr">密码不能为空</div>
         <label id="nickLabel" style="display:none">昵称</label>
         <input type="text" id="authNick" placeholder="请输入昵称" maxlength="10" style="display:none">
@@ -379,24 +382,32 @@ background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:15px;fon
     </div>
 </div>
 
-<!-- 实名认证弹窗 -->
-<div class="modal-overlay" id="verifyModal">
+<!-- 管理员面板 -->
+<div class="modal-overlay" id="adminModal">
     <div class="modal-box">
-        <button class="close-btn" onclick="closeVerifyModal()">&times;</button>
-        <div class="modal-title" style="font-size:18px;font-weight:700;text-align:center;margin-bottom:4px">实名认证</div>
+        <button class="close-btn" onclick="closeAdminModal()">&times;</button>
+        <div class="modal-title" style="font-size:18px;font-weight:700;text-align:center;margin-bottom:4px">🔧 管理员面板</div>
         <div style="font-size:12px;color:var(--t2);margin-bottom:16px;line-height:1.6;text-align:center">
-            根据相关法律法规要求，使用本服务需完成实名认证。<br>
-            <strong style="color:var(--org)">⚠️ 本服务不向未成年人提供任何服务，必须年满18周岁。</strong><br>
-            认证通过后即赠送 <strong style="color:var(--org)">30天VIP</strong> 体验。
+            设置用户VIP等级
         </div>
-        <label>真实姓名</label>
-        <input type="text" id="verifyName" placeholder="请输入真实姓名" maxlength="20">
-        <label>身份证号</label>
-        <input type="text" id="verifyIdCard" placeholder="请输入18位身份证号" maxlength="18" style="letter-spacing:1px">
-        <div id="verifyMsg" style="font-size:12px;color:var(--red);min-height:18px;margin-top:4px"></div>
-        <button class="btn-primary" onclick="submitVerify()">提交认证</button>
-        <div class="switch-link" onclick="closeVerifyModal()">稍后认证</div>
+        <label>用户邮箱</label>
+        <input type="email" id="adminUserEmail" placeholder="输入用户邮箱地址">
+        <label>VIP等级</label>
+        <select id="adminVipLevel" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg1);color:var(--t1);font-size:14px;outline:none">
+            <option value="0">0 - 免费用户</option>
+            <option value="1">1 - VIP用户</option>
+            <option value="2">2 - 高级VIP</option>
+            <option value="99">99 - 终身VIP</option>
+        </select>
+        <div id="adminMsg" style="font-size:12px;min-height:18px;margin-top:8px"></div>
+        <button class="btn-primary" onclick="adminSetVip()">设置VIP等级</button>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
+            <div style="font-size:12px;color:var(--t2);margin-bottom:8px;text-align:center">所有注册用户</div>
+            <div id="adminUserList" style="max-height:200px;overflow-y:auto;font-size:11px;color:var(--t2)"></div>
+        </div>
+        <div class="switch-link" onclick="closeAdminModal()">关闭</div>
     </div>
+</div>
 </div>
 
 <script>
@@ -413,149 +424,143 @@ const NEXT_PERIOD = '205';
 // 图表数据（Python端预计算）
 window.__CHART_DATA__ = {"chart1": {"periods": ["175", "176", "177", "178", "179", "180", "181", "182", "183", "184", "185", "186", "187", "188", "189", "190", "191", "192", "193", "194", "195", "196", "197", "198", "199", "200", "201", "202", "203", "204"], "draws": ["421", "269", "808", "266", "993", "520", "818", "662", "923", "902", "397", "045", "023", "969", "558", "026", "906", "425", "254", "283", "275", "419", "232", "685", "591", "912", "321", "988", "435", "978"], "a8": [{"kill": 1, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 1, "ok": true}, {"kill": 1, "ok": true}, {"kill": 0, "ok": false}, {"kill": 7, "ok": true}, {"kill": 0, "ok": true}, {"kill": 1, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 0, "ok": false}, {"kill": 7, "ok": true}, {"kill": 5, "ok": true}, {"kill": 0, "ok": true}, {"kill": 0, "ok": false}, {"kill": 1, "ok": true}, {"kill": 1, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 3, "ok": true}, {"kill": 0, "ok": true}, {"kill": 5, "ok": true}, {"kill": 9, "ok": true}, {"kill": 1, "ok": false}, {"kill": 0, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": null, "ok": null}], "a9": [{"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 3, "ok": true}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 1, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "a11": [{"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 9, "ok": true}, {"kill": 3, "ok": false}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 8, "ok": true}, {"kill": 0, "ok": true}, {"kill": 4, "ok": true}, {"kill": 4, "ok": true}, {"kill": 4, "ok": false}, {"kill": 2, "ok": false}, {"kill": 4, "ok": true}, {"kill": 9, "ok": true}, {"kill": 4, "ok": false}, {"kill": 5, "ok": true}, {"kill": 4, "ok": true}, {"kill": 1, "ok": false}, {"kill": 0, "ok": true}, {"kill": 1, "ok": false}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "d1": [{"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 5, "ok": true}, {"kill": 0, "ok": true}, {"kill": 3, "ok": true}, {"kill": 4, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 2, "ok": true}, {"kill": 5, "ok": true}, {"kill": 4, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 1, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "d2": [{"kill": 3, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 5, "ok": true}, {"kill": 2, "ok": true}, {"kill": 3, "ok": true}, {"kill": 4, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 2, "ok": false}, {"kill": 2, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "all_right": [false, true, true, true, true, false, true, true, false, true, true, false, true, true, false, false, true, false, false, true, false, false, true, true, false, true, false, true, true, false], "consensus": [2, 3, 3, 2, 4, 4, 4, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 2, 2, 5, 2, 3, 3, 4, 2, 4, 0]}, "chart2": {"current_streaks": {"a8": 0, "a9": 0, "a11": 0, "d1": 0, "d2": 0}, "max_streaks": {"a8": 13, "a9": 17, "a11": 17, "d1": 17, "d2": 17}, "accuracy_30d": {"a8": 82.8, "a9": 82.8, "a11": 75.9, "d1": 89.7, "d2": 89.7}}};
 
+// ==================== Firebase 配置 ====================
+// ⚠️ 部署前请替换为你的Firebase项目配置
+const firebaseConfig = {
+    apiKey: "AIzaSyB_PLACEHOLDER_KEY",
+    authDomain: "fc3d-webapp.firebaseapp.com",
+    projectId: "fc3d-webapp",
+    storageBucket: "fc3d-webapp.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef"
+};
+
+// 管理员邮箱
+const ADMIN_EMAIL = 'sujin-feng@coze.email';
+
+// 初始化Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
 // ==================== 会员系统 ====================
-const LS_KEY = 'fc3d_user';
-const AUTH_TOKEN_KEY = 'fc3d_auth_token';
+const LS_USER_KEY = 'fc3d_firebase_user';
 let currentUser = null;
 let isRegisterMode = false;
-let VIP_DATA = null;  // 服务端VIP数据缓存
+let VIP_DATA = null;
+let userDocRef = null;
+let unsubscribeUser = null;
 
 function loadCurrentUser() {
     try {
-        const u = JSON.parse(localStorage.getItem(LS_KEY));
-        if (u && u.phone) { currentUser = u; return; }
+        const u = JSON.parse(localStorage.getItem(LS_USER_KEY));
+        if (u && u.email) { currentUser = u; return; }
     } catch {}
     currentUser = null;
 }
 
 function saveCurrentUser() {
-    if (currentUser) localStorage.setItem(LS_KEY, JSON.stringify(currentUser));
-}
-function saveUserPhone() {
-    if (currentUser && currentUser.phone) localStorage.setItem(LS_KEY + '_phone', currentUser.phone);
-}
-
-// ==================== Token 管理 ====================
-function saveAuthToken(token) {
-    if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
-}
-function getAuthToken() {
-    return localStorage.getItem(AUTH_TOKEN_KEY) || null;
-}
-function clearAuthToken() {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-}
-function getAuthHeaders() {
-    const token = getAuthToken();
-    const headers = {'Content-Type': 'application/json'};
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-    return headers;
+    if (currentUser) localStorage.setItem(LS_USER_KEY, JSON.stringify(currentUser));
+    else localStorage.removeItem(LS_USER_KEY);
 }
 
 function isVip(user) {
     if (!user) return false;
-    const exp = user.vip_expiry || user.expiry_date;
-    if (!exp) return false;
-    try { return new Date(exp) > new Date(); } catch { return false; }
+    const level = parseInt(user.vip_level || 0);
+    return level >= 1;
 }
 
-function getVipDaysLeft(user) {
+function getVipLevel(user) {
     if (!user) return 0;
-    const exp = user.vip_expiry || user.expiry_date;
-    if (!exp) return 0;
-    try {
-        const diff = new Date(exp) - new Date();
-        return diff > 0 ? Math.ceil(diff / 86400000) : 0;
-    } catch { return 0; }
+    return parseInt(user.vip_level || 0);
 }
 
-// ==================== Server API ====================
-async function apiRegister(phone, pwd, nick) {
-    const resp = await fetch('/api/register', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        credentials: 'same-origin',
-        body: JSON.stringify({phone, password: pwd, nickname: nick})
+function getVipLevelName(level) {
+    const names = {0: '免费用户', 1: 'VIP', 2: '高级VIP', 99: '终身VIP'};
+    return names[level] || 'VIP Lv.' + level;
+}
+
+function isAdmin() {
+    return currentUser && currentUser.email === ADMIN_EMAIL;
+}
+
+// ==================== Firebase Auth ====================
+async function doRegister(email, pwd, nick) {
+    const cred = await auth.createUserWithEmailAndPassword(email, pwd);
+    const user = cred.user;
+    if (nick) await user.updateProfile({ displayName: nick });
+    // Create user doc in Firestore
+    await db.collection('users').doc(user.uid).set({
+        email: email,
+        nickname: nick || email.split('@')[0],
+        vip_level: 0,
+        register_time: firebase.firestore.FieldValue.serverTimestamp(),
+        last_login: firebase.firestore.FieldValue.serverTimestamp(),
+        created_at: new Date().toISOString()
     });
-    return await resp.json();
+    return { ok: true, user: {
+        uid: user.uid,
+        email: email,
+        nickname: nick || email.split('@')[0],
+        vip_level: 0
+    }};
 }
 
-async function apiLogin(phone, pwd) {
-    const resp = await fetch('/api/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        credentials: 'same-origin',
-        body: JSON.stringify({phone, password: pwd})
-    });
-    return await resp.json();
+async function doLogin(email, pwd) {
+    const cred = await auth.signInWithEmailAndPassword(email, pwd);
+    const user = cred.user;
+    // Update last login
+    await db.collection('users').doc(user.uid).update({
+        last_login: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(() => {});
+    return { ok: true, uid: user.uid, email: user.email, nickname: user.displayName || '' };
 }
 
-async function logout() {
-    try {
-        await fetch('/api/logout', { method: 'POST', headers: getAuthHeaders(), credentials: 'same-origin' });
-    } catch(e) {}
+async function doLogout() {
+    if (unsubscribeUser) { unsubscribeUser(); unsubscribeUser = null; }
+    await auth.signOut();
     currentUser = null;
     VIP_DATA = null;
-    localStorage.removeItem(LS_KEY);
-    localStorage.removeItem(LS_KEY + '_phone');
-    clearAuthToken();
+    localStorage.removeItem(LS_USER_KEY);
     refreshUI();
 }
 
-
-// ==================== 实名认证 ====================
-function validateIdCard(idCard) {
-    if (!idCard || idCard.length !== 18) return { ok: false, msg: '身份证号必须为18位' };
-    var reg = /^\d{17}[\dXx]$/;
-    if (!reg.test(idCard)) return { ok: false, msg: '身份证号格式不正确' };
-    var weights = [7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2];
-    var checks = '10X98765432';
-    var sum = 0;
-    for (var i = 0; i < 17; i++) sum += parseInt(idCard[i]) * weights[i];
-    if (checks[sum % 11] !== idCard[17].toUpperCase()) return { ok: false, msg: '身份证号校验位错误' };
-    var year = parseInt(idCard.substring(6, 10));
-    var month = parseInt(idCard.substring(10, 12));
-    var day = parseInt(idCard.substring(12, 14));
-    var birth = new Date(year, month - 1, day);
-    if (birth.getFullYear() !== year || birth.getMonth() !== month - 1 || birth.getDate() !== day)
-        return { ok: false, msg: '身份证号中的出生日期无效' };
-    var today = new Date();
-    var age = today.getFullYear() - year;
-    var m = today.getMonth() - (month - 1);
-    if (m < 0 || (m === 0 && today.getDate() < day)) age--;
-    if (age < 18) return { ok: false, msg: '必须年满18周岁才能使用本服务' };
-    return { ok: true, age: age };
-}
-function showVerifyModal() {
-    document.getElementById('verifyModal').style.display = 'flex';
-    document.getElementById('verifyMsg').textContent = '';
-    document.getElementById('verifyName').value = '';
-    document.getElementById('verifyIdCard').value = '';
-}
-function closeVerifyModal() { document.getElementById('verifyModal').style.display = 'none'; }
-async function submitVerify() {
-    var name = document.getElementById('verifyName').value.trim();
-    var idCard = document.getElementById('verifyIdCard').value.trim();
-    var msgEl = document.getElementById('verifyMsg');
-    // 先本地校验身份证格式
-    var localResult = validateIdCard(idCard);
-    if (!localResult.ok) { msgEl.style.color = 'var(--red)'; msgEl.textContent = localResult.msg; return; }
-    if (!name || name.length < 2) { msgEl.style.color = 'var(--red)'; msgEl.textContent = '请输入真实姓名（至少2个字）'; return; }
-    msgEl.style.color = 'var(--t2)'; msgEl.textContent = '提交中...';
-    try {
-        const resp = await fetch('/api/verify', {
-            method: 'POST', headers: getAuthHeaders(), credentials: 'same-origin',
-            body: JSON.stringify({name: name, id_card: idCard})
-        });
-        const res = await resp.json();
-        if (res.ok) {
-            currentUser = res.user; saveCurrentUser(); saveUserPhone();
-            msgEl.style.color = '#22c55e'; msgEl.textContent = res.msg;
-            setTimeout(function() { closeVerifyModal(); refreshUI(); }, 1500);
-        } else {
-            msgEl.style.color = 'var(--red)'; msgEl.textContent = res.error || '认证失败';
+// ==================== Firestore 用户数据 ====================
+function startUserListener(uid) {
+    if (unsubscribeUser) { unsubscribeUser(); unsubscribeUser = null; }
+    userDocRef = db.collection('users').doc(uid);
+    unsubscribeUser = userDocRef.onSnapshot((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            currentUser = {
+                uid: uid,
+                email: data.email || auth.currentUser?.email || '',
+                nickname: data.nickname || '',
+                vip_level: data.vip_level || 0,
+                register_time: data.register_time?.toDate()?.toISOString() || '',
+                last_login: data.last_login?.toDate()?.toISOString() || ''
+            };
+            saveCurrentUser();
+            renderUserArea();
+            renderVipContent();
         }
-    } catch(e) { msgEl.style.color = 'var(--red)'; msgEl.textContent = '网络错误，请重试'; }
+    }, (err) => {
+        console.error('User listener error:', err);
+    });
+}
+
+async function ensureUserDoc(uid, email) {
+    const doc = await db.collection('users').doc(uid).get();
+    if (!doc.exists) {
+        await db.collection('users').doc(uid).set({
+            email: email,
+            nickname: email.split('@')[0],
+            vip_level: 0,
+            register_time: firebase.firestore.FieldValue.serverTimestamp(),
+            last_login: firebase.firestore.FieldValue.serverTimestamp(),
+            created_at: new Date().toISOString()
+        });
+    }
 }
 
 // ==================== VIP数据解码 ====================
@@ -569,52 +574,23 @@ function decodeVipData() {
 // ==================== UI ====================
 async function refreshUI() {
     if (!currentUser) loadCurrentUser();
-    // 如果已登录，先从服务端同步用户数据（await确保完成后再渲染）
-    if (currentUser) {
-        await syncUserFromServer();
+    // Check Firebase auth state
+    const fbUser = auth.currentUser;
+    if (fbUser) {
+        // Ensure user doc exists, then start listener
+        await ensureUserDoc(fbUser.uid, fbUser.email);
+        startUserListener(fbUser.uid);
+    } else if (currentUser) {
+        // Try to re-auth with persistence
+        try {
+            // Firebase handles persistence automatically
+            // If no currentUser, clear local state
+            currentUser = null;
+            localStorage.removeItem(LS_USER_KEY);
+        } catch(e) {}
     }
-    // 同步完成后再渲染，确保使用最新服务端数据
     renderUserArea();
     renderVipContent();
-    // 如果VIP，加载服务端VIP数据
-    if (currentUser && (currentUser.is_vip || isVip(currentUser))) {
-        loadVipDataFromServer();
-    }
-}
-
-async function syncUserFromServer() {
-    try {
-        const resp = await fetch('/api/me', { headers: getAuthHeaders(), credentials: 'same-origin' });
-        const res = await resp.json();
-        if (res.ok && res.logged_in) {
-            currentUser = res;
-            delete currentUser.ok; delete currentUser.logged_in;
-            saveCurrentUser(); saveUserPhone();
-            // 不在此处渲染，由refreshUI统一渲染，避免重复
-        } else if (!res.logged_in) {
-            // 服务端未认证，但localStorage有数据 → 保留本地数据（离线模式）
-            // 仅在确实没有token时才清空（说明从未登录过）
-            if (!getAuthToken()) {
-                currentUser = null;
-                localStorage.removeItem(LS_KEY);
-                localStorage.removeItem(LS_KEY + '_phone');
-            }
-            // 否则保留本地数据，等网络恢复后自动重试
-        }
-    } catch(e) {
-        // 网络错误：不清空本地数据，保留离线状态
-    }
-}
-
-async function loadVipDataFromServer() {
-    try {
-        const resp = await fetch('/api/vip-data', { headers: getAuthHeaders(), credentials: 'same-origin' });
-        const result = await resp.json();
-        if (result.ok && result.data) {
-            VIP_DATA = result.data;
-            renderVipContent();
-        }
-    } catch(e) {}
 }
 
 function renderUserArea() {
@@ -623,28 +599,27 @@ function renderUserArea() {
         area.innerHTML = '<button class="btn-sm" onclick="showLogin()">🔑 登录/注册</button>';
         return;
     }
-    const vip = currentUser.is_vip || isVip(currentUser);
-    const days = currentUser.vip_days_left || getVipDaysLeft(currentUser);
+    const vip = isVip(currentUser);
+    const level = getVipLevel(currentUser);
     let html = '';
     if (vip) {
-        html += '<span class="vip-tag">VIP</span>';
+        html += '<span class="vip-tag">' + getVipLevelName(level) + '</span>';
     }
-    html += '<span class="user-name">' + escHtml(currentUser.nickname) + '</span>';
+    const displayName = currentUser.nickname || currentUser.email.split('@')[0];
+    html += '<span class="user-name">' + escHtml(displayName) + '</span>';
     if (vip) {
-        html += '<span style="font-size:10px;color:var(--org)">' + days + '天</span>';
-    } else if (currentUser.verified) {
-        html += '<span style="font-size:10px;color:var(--red)">VIP过期</span>';
-    } else {
-        html += '<span style="font-size:10px;color:var(--t3)">未认证</span>';
-        html += '<button class="btn-sm" onclick="showVerifyModal()" style="font-size:10px">去认证</button>';
+        html += '<span style="font-size:10px;color:var(--grn)">Lv.' + level + '</span>';
     }
-    html += '<button class="btn-sm danger" onclick="logout()">退出</button>';
+    if (isAdmin()) {
+        html += '<button class="btn-sm" onclick="showAdminModal()" style="font-size:10px;color:var(--pur)">⚙管理</button>';
+    }
+    html += '<button class="btn-sm danger" onclick="doLogout()">退出</button>';
     area.innerHTML = html;
 }
 
 function renderVipContent() {
-    const vip = currentUser && (currentUser.is_vip || isVip(currentUser));
-    const vipData = VIP_DATA || decodeVipData();
+    const vip = isVip(currentUser);
+    const vipData = decodeVipData();
     if (!vipData) return;
 
     // VIP Kill card overlay
@@ -705,7 +680,6 @@ function showLogin() {
     isRegisterMode = false;
     updateModal();
     document.getElementById('authModal').classList.add('show');
-    // 修复移动端键盘弹出遮挡输入框
     setTimeout(function(){
         document.querySelectorAll('#authModal input').forEach(function(el){
             el.addEventListener('focus', function(){ 
@@ -724,7 +698,7 @@ function switchMode() {
 
 function updateModal() {
     document.getElementById('modalTitle').textContent = isRegisterMode ? '注册' : '登录';
-    document.getElementById('modalSub').textContent = isRegisterMode ? '注册后需完成实名认证即可获赠30天VIP' : '登录后查看全部分析数据';
+    document.getElementById('modalSub').textContent = isRegisterMode ? '注册账号后即可使用基础功能' : '登录后查看全部分析数据';
     document.getElementById('authBtn').textContent = isRegisterMode ? '注册' : '登录';
     document.getElementById('switchLink').innerHTML = isRegisterMode
         ? '已有账号？<span onclick="switchMode()">立即登录</span>'
@@ -732,22 +706,23 @@ function updateModal() {
     const nickShow = isRegisterMode ? '' : 'none';
     document.getElementById('nickLabel').style.display = nickShow;
     document.getElementById('authNick').style.display = nickShow;
-    // Clear errors
     document.querySelectorAll('.error-msg').forEach(e => e.style.display = 'none');
 }
 
 async function handleAuth() {
-    const phone = document.getElementById('authPhone').value.trim();
+    const email = document.getElementById('authEmail').value.trim();
     const pwd = document.getElementById('authPwd').value;
     const nick = document.getElementById('authNick').value.trim();
     const errEl = document.getElementById('authErr');
     errEl.style.display = 'none';
 
-    if (!/^1\d{10}$/.test(phone)) {
-        document.getElementById('phoneErr').style.display = 'block'; return;
-    } else { document.getElementById('phoneErr').style.display = 'none'; }
+    // Email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        document.getElementById('emailErr').style.display = 'block'; return;
+    } else { document.getElementById('emailErr').style.display = 'none'; }
 
-    if (!pwd) {
+    if (!pwd || pwd.length < 6) {
+        document.getElementById('pwdErr').textContent = '密码至少6位';
         document.getElementById('pwdErr').style.display = 'block'; return;
     } else { document.getElementById('pwdErr').style.display = 'none'; }
 
@@ -758,231 +733,88 @@ async function handleAuth() {
         if (isRegisterMode) {
             if (!nick) { document.getElementById('nickErr').style.display = 'block'; btn.disabled = false; btn.textContent = '注册'; return; }
             else { document.getElementById('nickErr').style.display = 'none'; }
-            const res = await apiRegister(phone, pwd, nick);
-            if (!res.ok) { errEl.textContent = res.error || res.msg || '注册失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '注册'; return; }
-            // 保存token到localStorage
-            if (res.token) saveAuthToken(res.token);
-            currentUser = res.user; saveCurrentUser(); saveUserPhone();
+            const res = await doRegister(email, pwd, nick);
+            if (!res.ok) { errEl.textContent = '注册失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '注册'; return; }
+            currentUser = res.user;
+            saveCurrentUser();
+            startUserListener(res.user.uid);
             hideModal(); refreshUI();
-            setTimeout(showVerifyModal, 500);
         } else {
-            const res = await apiLogin(phone, pwd);
-            if (!res.ok) { errEl.textContent = res.error || res.msg || '登录失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '登录'; return; }
-            // 保存token到localStorage
-            if (res.token) saveAuthToken(res.token);
-            currentUser = res.user; saveCurrentUser(); saveUserPhone();
+            const res = await doLogin(email, pwd);
+            if (!res.ok) { errEl.textContent = '登录失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '登录'; return; }
+            currentUser = { uid: res.uid, email: res.email, nickname: res.nickname, vip_level: 0 };
+            saveCurrentUser();
+            startUserListener(res.uid);
             hideModal(); refreshUI();
         }
     } catch(e) {
-        errEl.textContent = '网络错误，请重试'; errEl.style.display = 'block';
+        let errMsg = '操作失败，请重试';
+        if (e.code === 'auth/email-already-in-use') errMsg = '该邮箱已注册';
+        else if (e.code === 'auth/invalid-email') errMsg = '邮箱格式不正确';
+        else if (e.code === 'auth/weak-password') errMsg = '密码太弱，请至少6位';
+        else if (e.code === 'auth/user-not-found') errMsg = '该邮箱未注册';
+        else if (e.code === 'auth/wrong-password') errMsg = '密码错误';
+        else if (e.code === 'auth/invalid-credential') errMsg = '邮箱或密码错误';
+        else if (e.code === 'auth/too-many-requests') errMsg = '请求太频繁，请稍后再试';
+        errEl.textContent = errMsg; errEl.style.display = 'block';
         btn.disabled = false; btn.textContent = isRegisterMode ? '注册' : '登录';
     }
 }
 
 function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-
-// ==================== 历史弹窗 ====================
-var histType = '', histShown = 0;
-var HIST_PAGE = 20;
-function openHistModal(type) {
-    histType = type; histShown = 0;
-    var titles = { a8: 'A8 杀码历史', vip: 'A9/A11/D1/D2 杀码历史', six: '6码推荐历史', t2: 'T2 位置杀码历史' };
-    document.getElementById('histModalTitle').textContent = titles[type] || '历史记录';
-    document.getElementById('histModalBody').innerHTML = '';
-    document.getElementById('histModal').classList.add('show');
-    loadHistPage();
+// ==================== 管理员功能 ====================
+function showAdminModal() {
+    if (!isAdmin()) { alert('无管理员权限'); return; }
+    document.getElementById('adminModal').classList.add('show');
+    loadAdminUserList();
 }
-function closeHistModal() { document.getElementById('histModal').classList.remove('show'); }
-function loadHistPage() {
-    var body = document.getElementById('histModalBody');
-    var total = PUB_HISTORY.length;
-    var start = Math.max(0, total - histShown - HIST_PAGE);
-    var end = total - histShown;
-    var vip = currentUser && (currentUser.is_vip || isVip(currentUser));
-    var vipData = vip ? (VIP_DATA || decodeVipData()) : null;
-    var h = '<table class="hist-tbl"><thead>';
-    if (histType === 'a8') {
-        h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>A8杀码</th><th>结果</th></tr></thead><tbody>';
-        for (var i = end - 1; i >= start; i--) {
-            var it = PUB_HISTORY[i];
-            var mk = it.a8_ok ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
-            h += '<tr><td>' + it.period.slice(-3) + '</td><td>' + (it.date||'').slice(5) + '</td>';
-            h += '<td><span class="draw-num">' + it.draw + '</span></td>';
-            h += '<td><span class="kill-val">' + (it.a8_kill != null ? it.a8_kill : '-') + '</span></td>';
-            h += '<td>' + (it.a8_kill != null ? mk : '-') + '</td></tr>';
-        }
-    } else if (histType === 'vip') {
-        h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>A9</th><th></th><th>A11</th><th></th><th>D1</th><th></th><th>D2</th><th></th></tr></thead><tbody>';
-        for (var i = end - 1; i >= start; i--) {
-            var it = PUB_HISTORY[i];
-            if (!vip || !vipData || !vipData.history_vip || i >= vipData.history_vip.length) {
-                h += '<tr><td>' + it.period.slice(-3) + '</td><td>' + (it.date||'').slice(5) + '</td>';
-                h += '<td><span class="draw-num">' + it.draw + '</span></td>';
-                h += '<td colspan="8" style="color:var(--org);font-size:10px">🔒 VIP查看</td></tr>';
-            } else {
-                var v = vipData.history_vip[i];
-                var a9m = v.a9o ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
-                var a11m = v.a11o ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
-                var dam = v.dao ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
-                var d2m = v.d2o ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
-                h += '<tr><td>' + it.period.slice(-3) + '</td><td>' + (it.date||'').slice(5) + '</td>';
-                h += '<td><span class="draw-num">' + it.draw + '</span></td>';
-                h += '<td><span class="kill-val">' + v.a9k + '</span></td><td>' + a9m + '</td>';
-                h += '<td><span class="kill-val">' + v.a11k + '</span></td><td>' + a11m + '</td>';
-                h += '<td><span class="kill-val">' + v.dak + '</span></td><td>' + dam + '</td>';
-                h += '<td><span class="kill-val">' + v.d2k + '</span></td><td>' + d2m + '</td></tr>';
-            }
-        }
-    } else if (histType === 'six') {
-        h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>推荐组</th><th>6码</th><th>结果</th></tr></thead><tbody>';
-        if (!vip || !vipData || !vipData.six_history) {
-            h += '<tr><td colspan="6" style="color:var(--org);font-size:11px">🔒 VIP解锁查看6码历史</td></tr>';
-        } else {
-            var sh = vipData.six_history;
-            var sS = Math.max(0, sh.length - histShown - HIST_PAGE);
-            var sE = Math.min(sh.length, sh.length - histShown);
-            for (var i = sE - 1; i >= sS; i--) {
-                var s = sh[i];
-                var mk = s.hit ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
-                h += '<tr><td>' + (s.p||'').slice(-3) + '</td><td>' + (s.d||'').slice(5) + '</td>';
-                h += '<td><span class="draw-num">' + (s.w||'-') + '</span></td>';
-                h += '<td>' + (s.g||'-') + '</td><td style="font-size:11px">' + (s.c||'-') + '</td>';
-                h += '<td>' + mk + '</td></tr>';
-            }
-        }
-    } else if (histType === 't2') {
-        h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>百位杀</th><th>十位杀</th><th>个位杀</th></tr></thead><tbody>';
-        for (var i = end - 1; i >= start; i--) {
-            var it = PUB_HISTORY[i];
-            h += '<tr><td>' + it.period.slice(-3) + '</td><td>' + (it.date||'').slice(5) + '</td>';
-            h += '<td><span class="draw-num">' + it.draw + '</span></td>';
-            h += '<td>' + (it.t2_b !== undefined ? it.t2_b : '-') + '</td>';
-            h += '<td>' + (it.t2_s !== undefined ? it.t2_s : '-') + '</td>';
-            h += '<td>' + (it.t2_g !== undefined ? it.t2_g : '-') + '</td></tr>';
-        }
-    }
-    h += '</tbody></table>';
-    body.innerHTML = h;
-    histShown += (end - start);
-    var btn = document.getElementById('histLoadBtn');
-    var maxI = histType === 'six' ? (vip && vipData && vipData.six_history ? vipData.six_history.length : 0) : total;
-    if (histShown >= maxI) { btn.disabled = true; btn.textContent = '已显示全部（共' + maxI + '期）'; }
-    else { btn.disabled = false; btn.textContent = '加载更多（剩余' + (maxI - histShown) + '期）'; }
-}
-function loadMoreHist() { loadHistPage(); }
+function closeAdminModal() { document.getElementById('adminModal').classList.remove('show'); }
 
-// ==================== 图表渲染 ====================
-function renderChart1() {
-    var cd = window.__CHART_DATA__;
-    if (!cd || !cd.chart1) return;
-    var c1 = cd.chart1;
-    var tbody = document.getElementById('chart1Body');
-    if (!tbody) return;
-    var algKeys = ['a8','a9','a11','d1','d2'];
-    var algNames = ['A8','A9','A11','D1','D2'];
-    var n = c1.periods.length;
-    // 统计各算法正确数
-    var algOk = {}, algTotal = {};
-    algKeys.forEach(function(k){ algOk[k]=0; algTotal[k]=0; });
-    var h = '';
-    for (var i = 0; i < n; i++) {
-        var rowClass = c1.all_right[i] ? ' class="all-right-row"' : '';
-        h += '<tr' + rowClass + '>';
-        h += '<td class="period-col">' + c1.periods[i] + '</td>';
-        h += '<td class="draw-col">' + c1.draws[i] + '</td>';
-        for (var j = 0; j < algKeys.length; j++) {
-            var alg = algKeys[j];
-            var cell = c1[alg][i];
-            if (cell.kill !== null && cell.kill !== undefined) {
-                algTotal[alg]++;
-                if (cell.ok) {
-                    algOk[alg]++;
-                    h += '<td class="kill-cell kill-ok">' + cell.kill + ' ✓</td>';
-                } else {
-                    h += '<td class="kill-cell kill-fail">' + cell.kill + ' ✗</td>';
-                }
-            } else {
-                h += '<td class="kill-cell kill-na">-</td>';
-            }
+async function adminSetVip() {
+    const email = document.getElementById('adminUserEmail').value.trim();
+    const level = parseInt(document.getElementById('adminVipLevel').value);
+    const msgEl = document.getElementById('adminMsg');
+    if (!email) { msgEl.style.color = 'var(--red)'; msgEl.textContent = '请输入用户邮箱'; return; }
+    msgEl.style.color = 'var(--t2)'; msgEl.textContent = '设置中...';
+    try {
+        // Find user by email
+        const snap = await db.collection('users').where('email', '==', email).get();
+        if (snap.empty) {
+            msgEl.style.color = 'var(--red)'; msgEl.textContent = '未找到该邮箱的用户'; return;
         }
-        h += '<td class="consensus-col">' + c1.consensus[i] + '</td>';
-        h += '</tr>';
+        const doc = snap.docs[0];
+        await doc.ref.update({ vip_level: level });
+        const levelName = getVipLevelName(level);
+        msgEl.style.color = '#22c55e'; msgEl.textContent = '✅ 已将 ' + email + ' 设置为 ' + levelName;
+        loadAdminUserList();
+    } catch(e) {
+        msgEl.style.color = 'var(--red)'; msgEl.textContent = '设置失败: ' + e.message;
     }
-    // 底部统计行
-    h += '<tr class="summary-row"><td colspan="2" style="text-align:right">正确率 →</td>';
-    for (var j = 0; j < algKeys.length; j++) {
-        var alg = algKeys[j];
-        var pct = algTotal[alg] > 0 ? (algOk[alg]/algTotal[alg]*100).toFixed(1) + '%' : '-';
-        h += '<td>' + pct + '</td>';
-    }
-    h += '<td>-</td></tr>';
-    tbody.innerHTML = h;
 }
 
-function renderChart2() {
-    var cd = window.__CHART_DATA__;
-    if (!cd || !cd.chart2) return;
-    var c2 = cd.chart2;
-    var algLabels = ['A8','A9','A11','D1','D2'];
-    var algKeys = ['a8','a9','a11','d1','d2'];
-    var algColors = ['#2196F3','#4CAF50','#FF9800','#9C27B0','#E91E63'];
-    var currentData = algKeys.map(function(k){ return c2.current_streaks[k]; });
-    var maxData = algKeys.map(function(k){ return c2.max_streaks[k]; });
-    var canvas = document.getElementById('chart2Canvas');
-    if (!canvas) return;
-    new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: algLabels,
-            datasets: [
-                {
-                    label: '当前连胜',
-                    data: currentData,
-                    backgroundColor: 'rgba(59,130,246,.7)',
-                    borderColor: '#3b82f6',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                },
-                {
-                    label: '历史最长连胜',
-                    data: maxData,
-                    backgroundColor: 'rgba(255,215,0,.7)',
-                    borderColor: '#ffd700',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    labels: { color: '#8b95b0', font: { size: 11 } }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: '#8b95b0', font: { size: 11 } },
-                    grid: { color: 'rgba(42,53,85,.4)' }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { color: '#8b95b0', font: { size: 10 }, stepSize: 5 },
-                    grid: { color: 'rgba(42,53,85,.4)' }
-                }
-            }
-        }
-    });
-    // 准确率行
-    var accRow = document.getElementById('chart2AccRow');
-    if (accRow) {
-        var ah = '';
-        for (var i = 0; i < algKeys.length; i++) {
-            ah += '<div class="chart2-acc-item"><span class="alg-name" style="color:' + algColors[i] + '">' + algLabels[i] + '</span><span class="acc-val">' + c2.accuracy_30d[algKeys[i]] + '%</span></div>';
-        }
-        accRow.innerHTML = ah;
+async function loadAdminUserList() {
+    const listEl = document.getElementById('adminUserList');
+    try {
+        const snap = await db.collection('users').orderBy('register_time', 'desc').limit(50).get();
+        if (snap.empty) { listEl.innerHTML = '<div style="text-align:center;color:var(--t3)">暂无用户</div>'; return; }
+        let html = '<table style="width:100%;border-collapse:collapse">';
+        html += '<tr style="border-bottom:1px solid var(--bd)"><th style="text-align:left;padding:4px">邮箱</th><th style="padding:4px">等级</th><th style="padding:4px">注册时间</th></tr>';
+        snap.forEach(doc => {
+            const d = doc.data();
+            const level = d.vip_level || 0;
+            const levelColor = level > 0 ? 'var(--org)' : 'var(--t3)';
+            const regTime = d.created_at ? new Date(d.created_at).toLocaleDateString('zh-CN') : '-';
+            html += '<tr style="border-bottom:1px solid rgba(42,53,85,.3)">';
+            html += '<td style="padding:4px;font-size:11px;word-break:break-all">' + (d.email || '-') + '</td>';
+            html += '<td style="padding:4px;text-align:center;color:' + levelColor + ';font-weight:600">' + getVipLevelName(level) + '</td>';
+            html += '<td style="padding:4px;text-align:center">' + regTime + '</td>';
+            html += '</tr>';
+        });
+        html += '</table>';
+        listEl.innerHTML = html;
+    } catch(e) {
+        listEl.innerHTML = '<div style="color:var(--red)">加载失败: ' + e.message + '</div>';
     }
 }
 
