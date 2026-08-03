@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>智能号码分析</title>
+<style>
+:root{--bg0:#0a0e1a;--bg1:#111827;--bg2:#1a2035;--bd:#2a3555;--t1:#e8eaf0;--t2:#8b95b0;--t3:#5a6480;
+--red:#ff4757;--redbg:rgba(255,71,87,.12);--grn:#2ed573;--grnbg:rgba(46,213,115,.12);
+--blu:#3b82f6;--org:#ffa502;--orgbg:rgba(255,165,2,.12);--pur:#a855f7}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;
+background:var(--bg0);color:var(--t1);min-height:100vh;line-height:1.6;-webkit-font-smoothing:antialiased}
+.ctr{max-width:480px;margin:0 auto;padding:16px 12px 32px}
+
+/* Top bar */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px}
+.topbar .brand{font-size:13px;color:var(--t3);font-weight:500}
+.topbar .user-area{display:flex;align-items:center;gap:8px}
+.topbar .user-name{font-size:12px;color:var(--grn);font-weight:600}
+.topbar .vip-tag{font-size:10px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;padding:2px 6px;border-radius:4px;font-weight:600}
+.topbar .btn-sm{font-size:11px;padding:4px 10px;border-radius:8px;cursor:pointer;border:1px solid var(--bd);background:var(--bg1);color:var(--t2);transition:all .2s}
+.topbar .btn-sm:hover{background:var(--bg2);color:var(--t1)}
+.topbar .btn-sm.danger{color:var(--red);border-color:rgba(255,71,87,.3)}
+.topbar .btn-sm.danger:hover{background:var(--redbg)}
+
+/* Header */
+.header{text-align:center;padding:12px 0 8px}
+.header h1{font-size:22px;font-weight:700;letter-spacing:2px;
+background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.header .sub{font-size:12px;color:var(--t3);margin-top:2px}
+.uptime{text-align:center;font-size:11px;color:var(--t3);margin-bottom:14px}
+.uptime .dot{display:inline-block;width:6px;height:6px;background:var(--grn);border-radius:50%;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Latest draw */
+.latest-draw{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(168,85,247,.08));border:1px solid rgba(59,130,246,.25);border-radius:16px;padding:16px;margin-bottom:14px;text-align:center}
+.latest-draw .ld-label{font-size:11px;color:var(--t3);margin-bottom:6px;font-weight:500}
+.latest-draw .ld-period{font-size:13px;color:var(--blu);font-weight:600;margin-bottom:8px}
+.latest-draw .ld-balls{display:flex;justify-content:center;gap:10px}
+.latest-draw .ld-ball{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(59,130,246,.3)}
+.latest-draw .ld-date{font-size:11px;color:var(--t3);margin-top:8px}
+.latest-draw .ld-meta{display:flex;justify-content:center;gap:16px;margin-top:6px;font-size:11px;color:var(--t2)}
+.latest-draw .ld-meta span{display:flex;align-items:center;gap:3px}
+
+/* Card */
+.card{background:var(--bg2);border-radius:16px;border:1px solid var(--bd);padding:18px 16px;margin-bottom:14px;position:relative;overflow:hidden}
+.card-title{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:18px}
+.badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
+.badge-today{background:var(--redbg);color:var(--red)}
+.badge-note{background:var(--orgbg);color:var(--org)}
+.badge-vip{background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff}
+
+/* VIP lock overlay */
+.vip-lock{position:absolute;inset:0;background:rgba(10,14,26,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:16px;gap:8px}
+.vip-lock .lock-icon{font-size:32px;opacity:.8}
+.vip-lock .lock-text{font-size:14px;color:var(--org);font-weight:600}
+.vip-lock .lock-btn{font-size:12px;padding:8px 20px;border-radius:20px;border:none;
+background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;font-weight:600;cursor:pointer;transition:transform .2s}
+.vip-lock .lock-btn:hover{transform:scale(1.05)}
+.vip-lock .lock-btn:active{transform:scale(.97)}
+
+/* Kill Grid */
+.kill-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kill-item{background:var(--bg1);border-radius:12px;padding:14px 12px;text-align:center;border:1px solid var(--bd)}
+.kill-label{font-size:12px;color:var(--t2);margin-bottom:6px}
+.kill-num{font-size:32px;font-weight:800;color:var(--red);line-height:1.2}
+.kill-meta{font-size:10px;color:var(--t3);margin-top:4px}
+.kill-item.joint{background:var(--redbg);border-color:rgba(255,71,87,.3)}
+.kill-item.joint .kill-label{color:var(--red)}
+.joint-kills{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+
+/* 6-code */
+.rec-box{background:var(--grnbg);border:1px solid rgba(46,213,115,.25);border-radius:12px;padding:16px;text-align:center;margin-bottom:14px}
+.rec-label{font-size:12px;color:var(--grn);margin-bottom:8px}
+.rec-codes{display:flex;justify-content:center;gap:8px;margin-bottom:8px}
+.code-ball{width:38px;height:38px;border-radius:50%;background:var(--grn);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.rec-miss{font-size:12px;color:var(--t2)}
+.rec-miss strong{color:var(--org);font-size:16px}
+
+.om-table{width:100%;border-collapse:collapse;font-size:13px}
+.om-table th{text-align:left;padding:8px 6px;color:var(--t2);font-weight:500;font-size:11px;border-bottom:1px solid var(--bd)}
+.om-table td{padding:8px 6px;border-bottom:1px solid rgba(42,53,85,.5)}
+.om-table tr.best{background:var(--grnbg)}
+.code-cell{font-family:'SF Mono',Menlo,monospace;letter-spacing:2px;color:var(--t1);font-weight:600}
+.miss-bar-c{position:relative;height:20px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden}
+.miss-bar{height:100%;border-radius:4px;min-width:4px;background:linear-gradient(90deg,var(--blu),var(--pur))}
+.miss-val{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--t1)}
+.rec-badge{background:var(--grn);color:#fff;font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600}
+
+/* Accuracy */
+.acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acc-item{background:var(--bg1);border-radius:12px;padding:14px 12px;text-align:center;border:1px solid var(--bd)}
+.acc-val{font-size:24px;font-weight:800;line-height:1.2}
+.acc-val.hi{color:var(--grn)}.acc-val.mid{color:var(--org)}
+.acc-det{font-size:10px;color:var(--t3);margin-top:4px}
+
+/* Position kill */
+.pos-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pos-item{background:var(--bg1);border-radius:10px;padding:12px 8px;text-align:center;border:1px solid var(--bd)}
+.pos-item .lb{font-size:11px;color:var(--t2);margin-bottom:4px}
+.pos-item .vl{font-size:24px;font-weight:800;color:var(--red)}
+
+/* History */
+.htable{width:100%;border-collapse:collapse;font-size:13px}
+.htable th{text-align:center;padding:8px 4px;color:var(--t2);font-weight:500;font-size:11px;border-bottom:1px solid var(--bd);white-space:nowrap}
+.htable td{padding:9px 4px;border-bottom:1px solid rgba(42,53,85,.5);text-align:center;white-space:nowrap}
+.htable td:first-child{text-align:left}
+.draw-num{font-family:'SF Mono',Menlo,monospace;font-size:15px;font-weight:700;letter-spacing:4px;color:var(--blu)}
+.kill-val{font-weight:700;color:var(--red)}
+.ok-m{color:var(--grn);font-size:14px}.er-m{color:var(--red);font-size:14px}
+.no-d{color:var(--t3);font-size:11px}
+.load-btn{display:block;width:100%;padding:12px;background:var(--bg1);border:1px solid var(--bd);border-radius:12px;
+color:var(--t2);font-size:14px;font-weight:500;cursor:pointer;transition:background .2s,color .2s}
+.load-btn:hover{background:var(--bg2);color:var(--t1)}
+.load-btn:active{background:#1f2847}
+.load-btn.loading{opacity:.6;pointer-events:none}
+.load-btn:disabled{opacity:.3;pointer-events:none}
+
+/* Ad placeholder */
+.promo-box{border-radius:12px;overflow:hidden;margin-bottom:14px}
+.promo-top{height:70px}
+.promo-mid{height:50px}
+.promo-bot{height:80px}
+
+/* Disclaimer */
+
+/* History button & modal */
+.hist-btn{background:var(--bg1);border:1px solid var(--bd);border-radius:20px;padding:8px 20px;color:var(--t2);font-size:12px;cursor:pointer;transition:all .2s}
+.hist-btn:hover{background:#1f2847;color:var(--t1);border-color:var(--blu)}
+.hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1100;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.hist-modal.show{display:flex}
+.hist-box{background:var(--bg2);border:1px solid var(--bd);border-radius:20px;padding:24px 20px;width:100%;max-width:500px;margin:auto;position:relative}
+.hist-box h3{font-size:16px;font-weight:700;margin-bottom:16px;text-align:center}
+.hist-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--t3);font-size:22px;cursor:pointer}
+.hist-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.hist-tbl th{text-align:center;padding:6px 4px;color:var(--t3);font-weight:400;font-size:10px;border-bottom:1px solid var(--bd);white-space:nowrap}
+.hist-tbl td{padding:7px 4px;border-bottom:1px solid rgba(42,53,85,.4);text-align:center;white-space:nowrap}
+.hist-tbl td:first-child{text-align:left}
+.hist-load{display:block;width:100%;padding:10px;background:var(--bg1);border:1px solid var(--bd);border-radius:10px;color:var(--t2);font-size:13px;cursor:pointer;margin-top:10px}
+.hist-load:hover{background:#1f2847;color:var(--t1)}
+.disc{text-align:center;padding:20px 16px;font-size:11px;color:var(--t3);line-height:1.8}
+.disc .warn{color:var(--org);font-weight:600}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--bd);border-radius:20px;padding:28px 24px;width:100%;max-width:360px;margin:auto;position:relative}
+.modal-box h2{font-size:18px;font-weight:700;margin-bottom:4px;text-align:center}
+.modal-box .modal-sub{font-size:12px;color:var(--t3);text-align:center;margin-bottom:20px}
+.modal-box label{font-size:12px;color:var(--t2);display:block;margin-bottom:4px;margin-top:12px}
+.modal-box input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg1);color:var(--t1);font-size:14px;outline:none}
+.modal-box input:focus{border-color:var(--blu);scroll-margin-top:120px}
+.modal-box .btn-primary{width:100%;padding:12px;border-radius:12px;border:none;
+background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:20px;transition:opacity .2s}
+.modal-box .btn-primary:hover{opacity:.9}
+.modal-box .btn-primary:active{opacity:.8}
+.modal-box .switch-link{text-align:center;margin-top:14px;font-size:13px;color:var(--t2);cursor:pointer}
+.modal-box .switch-link span{color:var(--blu);font-weight:600}
+.modal-box .error-msg{color:var(--red);font-size:12px;margin-top:6px;display:none}
+.modal-box .close-btn{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer}
+
+/* 图表1 - 杀码对比热力图 */
+.chart1-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px}
+.chart1-tbl{width:100%;border-collapse:collapse;font-size:11px;min-width:420px}
+.chart1-tbl th,.chart1-tbl td{padding:5px 4px;text-align:center;border-bottom:1px solid var(--bd);white-space:nowrap}
+.chart1-tbl th{color:var(--t2);font-weight:600;font-size:10px;position:sticky;top:0;background:var(--bg1);z-index:1}
+.chart1-tbl .period-col{color:var(--t3);font-size:10px}
+.chart1-tbl .draw-col{color:var(--t1);font-weight:600;letter-spacing:1px}
+.chart1-tbl .kill-cell{font-weight:600;font-size:12px}
+.chart1-tbl .kill-ok{background:rgba(0,200,83,.15);color:#00c853;border-radius:4px}
+.chart1-tbl .kill-fail{background:rgba(255,23,68,.15);color:#ff1744;border-radius:4px}
+.chart1-tbl .kill-na{color:var(--t3)}
+.chart1-tbl .consensus-col{color:var(--org);font-weight:600}
+.chart1-tbl tr.all-right-row{outline:2px solid #ffd700;outline-offset:-1px}
+.chart1-tbl .summary-row td{font-weight:700;color:var(--grn);border-top:2px solid var(--bd);background:rgba(46,213,115,.06)}
+
+/* 图表2 - 连胜柱状图 */
+.chart2-canvas-wrap{position:relative;width:100%;max-width:400px;margin:8px auto 0}
+.chart2-acc-row{display:flex;justify-content:space-around;margin-top:8px;flex-wrap:wrap;gap:4px}
+.chart2-acc-item{font-size:10px;text-align:center;padding:3px 6px;background:var(--bg2);border-radius:6px;border:1px solid var(--bd)}
+.chart2-acc-item .alg-name{font-weight:600;margin-right:2px}
+.chart2-acc-item .acc-val{color:var(--grn);font-weight:600}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="ctr">
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="brand">📊 FC3D Analytics</div>
+        <div class="user-area" id="userArea"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>智能号码分析</h1>
+        <div class="sub">多算法融合 · 数据驱动</div>
+    </div>
+    <div class="uptime">
+        <span class="dot"></span>数据更新至 2026-08-02 · 第204期
+    </div>
+
+    <!-- Latest Draw Result -->
+    <div class="latest-draw">
+        <div class="ld-label">🏆 最新开奖结果</div>
+        <div class="ld-period">第 204 期</div>
+        <div class="ld-balls">
+            <div class="ld-ball">9</div>
+            <div class="ld-ball">7</div>
+            <div class="ld-ball">8</div>
+        </div>
+        <div class="ld-date">2026-08-02</div>
+        <div class="ld-meta">
+            <span>和值: 24</span>
+            <span>跨度: 2</span>
+            <span>类型: 组六</span>
+        </div>
+    </div>
+
+    <!-- Ad: Top banner -->
+    <div class="promo-box promo-top"><img src="promo_top.png" alt="合作推广" style="width:100%;max-width:728px;height:auto;border-radius:10px;"></div>
+
+    <!-- 1a. 今日分析 - 公开 (A8) -->
+    <div class="card">
+        <div class="card-title">
+            <span class="icon">🎯</span>今日杀码分析 · 第205期预测
+            <span class="badge badge-today">第205期</span>
+        </div>
+        <div class="kill-grid" style="grid-template-columns:1fr">
+            <div class="kill-item">
+                <div class="kill-label">A8 算法</div>
+                <div class="kill-num">0</div>
+                <div class="kill-meta">层级 L0 · 训练100% · 预测第205期</div>
+            </div>
+        </div>
+        <div style="text-align:center;margin-top:10px"><button class="hist-btn" onclick="openHistModal('a8')">📋 查看A8历史记录</button></div>
+    </div>
+
+    <!-- 1b. 高级分析 - VIP -->
+    <div class="card" id="vipKillCard" style="position:relative;min-height:160px">
+        <div class="card-title">
+            <span class="icon">🔮</span>高级杀码分析 · 第205期预测
+            <span class="badge badge-vip">VIP</span>
+        </div>
+        <div class="kill-grid" id="vipKillGrid" style="grid-template-columns:1fr 1fr">
+            <div class="kill-item" id="a9KillCard">
+                <div class="kill-label">A9 算法</div>
+                <div id="a9KillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+            </div>
+            <div class="kill-item" id="a11KillCard">
+                <div class="kill-label">A11 算法</div>
+                <div id="a11KillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+            </div>
+            <div class="kill-item" id="daKillCard">
+                <div class="kill-label">D1 地妖一号算法</div>
+                <div id="daKillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+            </div>
+            <div class="kill-item" id="d2KillCard">
+                <div class="kill-label">D2 地妖二号算法</div>
+                <div id="d2KillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+            </div>
+            <div class="kill-item joint" id="jointKillCard" style="grid-column:1/-1">
+                <div class="kill-label">联合杀码（并集）</div>
+                <div id="jointKillContent"><div class="kill-num" style="color:var(--t3);font-size:24px">— —</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+            </div>
+        </div>
+        <div style="text-align:center;margin-top:10px"><button class="hist-btn" onclick="openHistModal('vip')">📋 查看A9/A11/D1/D2历史记录</button></div>
+        <div class="vip-lock" id="lockVipKill"><div class="lock-icon">🔒</div><div class="lock-text">VIP专属功能</div><button class="lock-btn" onclick="showLogin()">开通VIP查看全部分析</button></div>
+    </div>
+
+    <!-- 6码推荐 (VIP) -->
+    <div class="card" id="sixCodeCard" style="position:relative;min-height:180px">
+        <div class="card-title"><span class="icon">🔢</span>6码推荐<span class="badge badge-vip">VIP</span></div>
+        <div id="sixCodeContent">
+            <table class="om-table"><thead><tr><th>组号</th><th>6码组合</th><th>遗漏期数</th><th></th></tr></thead>
+            <tbody><tr><td>G0</td><td class="code-cell">— — — — — —</td><td><span style="color:var(--t3)">VIP解锁</span></td><td></td></tr></tbody></table>
+        </div>
+        <div style="text-align:center;margin-top:10px"><button class="hist-btn" onclick="openHistModal('six')">📋 查看6码历史记录</button></div>
+        <div class="vip-lock" id="lockSix"><div class="lock-icon">🔒</div><div class="lock-text">VIP专属功能</div><button class="lock-btn" onclick="showLogin()">开通VIP查看全部分析</button></div>
+    </div>
+
+    <!-- Ad: Native -->
+    <div class="promo-box promo-mid"><img src="promo_mid.png" alt="合作推广" style="width:100%;max-width:728px;height:auto;border-radius:10px;"></div>
+
+    <!-- 位置杀码 (公开) -->
+    <div class="card">
+        <div class="card-title"><span class="icon">📍</span>位置杀码<span class="badge badge-note">基于最新可用数据</span></div>
+        <div class="pos-grid">
+            <div class="pos-item"><div class="lb">综合</div><div class="vl">3</div></div>
+            <div class="pos-item"><div class="lb">百位</div><div class="vl">7</div></div>
+            <div class="pos-item"><div class="lb">十位</div><div class="vl">4</div></div>
+            <div class="pos-item"><div class="lb">个位</div><div class="vl">3</div></div>
+        </div>
+        <div style="text-align:center;margin-top:10px"><button class="hist-btn" onclick="openHistModal('t2')">📋 查看T2历史记录</button></div>
+    </div>
+
+    <!-- 2. 算法准确率 -->
+    <div class="card">
+        <div class="card-title"><span class="icon">📈</span>算法准确率统计</div>
+        <div class="acc-grid">
+            <div class="acc-item"><div class="kill-label">A8 算法</div><div class="acc-val hi">79.3%</div><div class="acc-det">161/203 期正确</div></div>
+            <div class="acc-item"><div class="kill-label">A9 算法</div><div class="acc-val hi">77.3%</div><div class="acc-det">157/203 期正确</div></div>
+            <div class="acc-item"><div class="kill-label">A11 算法</div><div class="acc-val hi">79.8%</div><div class="acc-det">162/203 期正确</div></div>
+            <div class="acc-item"><div class="kill-label">D1 地妖一号算法</div><div class="acc-val hi">79.8%</div><div class="acc-det">162/203 期正确</div></div>
+            <div class="acc-item"><div class="kill-label">D2 地妖二号算法</div><div class="acc-val hi">80.3%</div><div class="acc-det">163/203 期正确</div></div>
+            <div class="acc-item"><div class="kill-label">A9+A11 联合</div><div class="acc-val mid">64.5%</div><div class="acc-det">131/203 同时正确</div></div>
+            <div class="acc-item"><div class="kill-label">A9+A11+D1 联合</div><div class="acc-val mid">64.0%</div><div class="acc-det">130/203 同时正确</div></div>
+            <div class="acc-item"><div class="kill-label">A9+A11+D1+D2 联合</div><div class="acc-val mid">63.5%</div><div class="acc-det">129/203 同时正确</div></div>
+        </div>
+    </div>
+
+    <!-- 图表1: 五算法杀码对比热力图 -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🔥</span>五算法近30期杀码对比</div>
+        <div class="chart1-wrap">
+            <table class="chart1-tbl" id="chart1Table">
+                <thead><tr><th>期号</th><th>开奖号</th><th>A8</th><th>A9</th><th>A11</th><th>D1</th><th>D2</th><th>共识</th></tr></thead>
+                <tbody id="chart1Body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 图表2: 连胜统计柱状图 -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🏆</span>杀码连胜统计</div>
+        <div class="chart2-canvas-wrap">
+            <canvas id="chart2Canvas"></canvas>
+        </div>
+        <div class="chart2-acc-row" id="chart2AccRow"></div>
+    </div>
+
+    <!-- Ad: Bottom -->
+    <div class="promo-box promo-bot"><img src="promo_bot.png" alt="合作推广" style="width:100%;max-width:728px;height:auto;border-radius:10px;"></div>
+
+    <!-- 免责声明 -->
+    <div class="disc">
+        <span class="warn">⚠ 免责声明与服务条款</span><br>
+        1. 本工具仅供数据分析研究参考，不构成任何投注建议或诱导行为。<br>
+        2. 历史数据表现不代表未来结果，请理性对待。<br>
+        3. <strong style="color:var(--org)">本服务仅面向年满18周岁的成年人，不向未成年人提供任何服务。</strong><br>
+        4. 用户需完成实名认证方可使用VIP功能，认证时需确认年龄已满18周岁。<br>
+        5. 任何基于本工具数据做出的决策，责任由用户自行承担。<br>
+        6. 如发现未成年人使用本服务，我们将立即终止其账号。
+    </div>
+</div>
+
+<!-- Login/Register Modal -->
+<div class="modal-overlay" id="authModal">
+    <div class="modal-box" style="position:relative">
+        <button class="close-btn" onclick="hideModal()">&times;</button>
+        <h2 id="modalTitle">登录</h2>
+        <div class="modal-sub" id="modalSub">登录后查看全部分析数据</div>
+        <label>手机号</label>
+        <input type="tel" id="authPhone" placeholder="请输入手机号" maxlength="11">
+        <div class="error-msg" id="phoneErr">请输入正确的11位手机号</div>
+        <label>密码</label>
+        <input type="password" id="authPwd" placeholder="请输入密码" maxlength="20">
+        <div class="error-msg" id="pwdErr">密码不能为空</div>
+        <label id="nickLabel" style="display:none">昵称</label>
+        <input type="text" id="authNick" placeholder="请输入昵称" maxlength="10" style="display:none">
+        <div class="error-msg" id="nickErr">昵称不能为空</div>
+        <div class="error-msg" id="authErr" style="text-align:center;margin-top:8px"></div>
+        <button class="btn-primary" id="authBtn" onclick="handleAuth()">登录</button>
+        <div class="switch-link" id="switchLink">还没有账号？<span onclick="switchMode()">立即注册</span></div>
+    </div>
+</div>
+
+
+<!-- 历史记录弹窗 -->
+<div class="hist-modal" id="histModal">
+    <div class="hist-box">
+        <button class="hist-close" onclick="closeHistModal()">&times;</button>
+        <h3 id="histModalTitle">历史记录</h3>
+        <div id="histModalBody"></div>
+        <button class="hist-load" id="histLoadBtn" onclick="loadMoreHist()">加载更多</button>
+    </div>
+</div>
+
+<!-- 实名认证弹窗 -->
+<div class="modal-overlay" id="verifyModal">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeVerifyModal()">&times;</button>
+        <div class="modal-title" style="font-size:18px;font-weight:700;text-align:center;margin-bottom:4px">实名认证</div>
+        <div style="font-size:12px;color:var(--t2);margin-bottom:16px;line-height:1.6;text-align:center">
+            根据相关法律法规要求，使用本服务需完成实名认证。<br>
+            <strong style="color:var(--org)">⚠️ 本服务不向未成年人提供任何服务，必须年满18周岁。</strong><br>
+            认证通过后即赠送 <strong style="color:var(--org)">30天VIP</strong> 体验。
+        </div>
+        <label>真实姓名</label>
+        <input type="text" id="verifyName" placeholder="请输入真实姓名" maxlength="20">
+        <label>身份证号</label>
+        <input type="text" id="verifyIdCard" placeholder="请输入18位身份证号" maxlength="18" style="letter-spacing:1px">
+        <div id="verifyMsg" style="font-size:12px;color:var(--red);min-height:18px;margin-top:4px"></div>
+        <button class="btn-primary" onclick="submitVerify()">提交认证</button>
+        <div class="switch-link" onclick="closeVerifyModal()">稍后认证</div>
+    </div>
+</div>
+
+<script>
+// ==================== 数据嵌入 ====================
+// 公开数据：A8杀码+开奖（所有用户可见）
+const PUB_HISTORY = [{"period": "2026001", "date": "2026-01-01", "draw": "298", "a8_kill": 7, "a8_ok": true, "t2_b": "-", "t2_s": "-", "t2_g": "-"}, {"period": "2026002", "date": "2026-01-02", "draw": "520", "a8_kill": 3, "a8_ok": true, "t2_b": 8, "t2_s": 2, "t2_g": 9}, {"period": "2026003", "date": "2026-01-03", "draw": "601", "a8_kill": 7, "a8_ok": true, "t2_b": 0, "t2_s": 5, "t2_g": 2}, {"period": "2026004", "date": "2026-01-04", "draw": "019", "a8_kill": 5, "a8_ok": true, "t2_b": 1, "t2_s": 6, "t2_g": 0}, {"period": "2026005", "date": "2026-01-05", "draw": "476", "a8_kill": 6, "a8_ok": false, "t2_b": 9, "t2_s": 0, "t2_g": 1}, {"period": "2026006", "date": "2026-01-06", "draw": "244", "a8_kill": 0, "a8_ok": true, "t2_b": 6, "t2_s": 4, "t2_g": 7}, {"period": "2026007", "date": "2026-01-07", "draw": "353", "a8_kill": 1, "a8_ok": true, "t2_b": 4, "t2_s": 2, "t2_g": 4}, {"period": "2026008", "date": "2026-01-08", "draw": "252", "a8_kill": 8, "a8_ok": true, "t2_b": 3, "t2_s": 3, "t2_g": 5}, {"period": "2026009", "date": "2026-01-09", "draw": "265", "a8_kill": 8, "a8_ok": true, "t2_b": 2, "t2_s": 2, "t2_g": 5}, {"period": "2026010", "date": "2026-01-10", "draw": "667", "a8_kill": 0, "a8_ok": true, "t2_b": 5, "t2_s": 2, "t2_g": 6}, {"period": "2026011", "date": "2026-01-11", "draw": "647", "a8_kill": 1, "a8_ok": true, "t2_b": 7, "t2_s": 6, "t2_g": 6}, {"period": "2026012", "date": "2026-01-12", "draw": "241", "a8_kill": 0, "a8_ok": true, "t2_b": 7, "t2_s": 6, "t2_g": 4}, {"period": "2026013", "date": "2026-01-13", "draw": "513", "a8_kill": 5, "a8_ok": false, "t2_b": 1, "t2_s": 2, "t2_g": 4}, {"period": "2026014", "date": "2026-01-14", "draw": "050", "a8_kill": 0, "a8_ok": false, "t2_b": 3, "t2_s": 5, "t2_g": 1}, {"period": "2026015", "date": "2026-01-15", "draw": "532", "a8_kill": 8, "a8_ok": true, "t2_b": 0, "t2_s": 0, "t2_g": 5}, {"period": "2026016", "date": "2026-01-16", "draw": "582", "a8_kill": 6, "a8_ok": true, "t2_b": 2, "t2_s": 5, "t2_g": 3}, {"period": "2026017", "date": "2026-01-17", "draw": "945", "a8_kill": 3, "a8_ok": true, "t2_b": 2, "t2_s": 5, "t2_g": 8}, {"period": "2026018", "date": "2026-01-18", "draw": "494", "a8_kill": 0, "a8_ok": true, "t2_b": 5, "t2_s": 9, "t2_g": 4}, {"period": "2026019", "date": "2026-01-19", "draw": "223", "a8_kill": 8, "a8_ok": true, "t2_b": 4, "t2_s": 4, "t2_g": 9}, {"period": "2026020", "date": "2026-01-20", "draw": "676", "a8_kill": 9, "a8_ok": true, "t2_b": 3, "t2_s": 2, "t2_g": 2}, {"period": "2026021", "date": "2026-01-21", "draw": "559", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 6, "t2_g": 7}, {"period": "2026022", "date": "2026-01-22", "draw": "678", "a8_kill": 0, "a8_ok": true, "t2_b": 9, "t2_s": 5, "t2_g": 5}, {"period": "2026023", "date": "2026-01-23", "draw": "784", "a8_kill": 0, "a8_ok": true, "t2_b": 8, "t2_s": 6, "t2_g": 7}, {"period": "2026024", "date": "2026-01-24", "draw": "911", "a8_kill": 0, "a8_ok": true, "t2_b": 4, "t2_s": 7, "t2_g": 8}, {"period": "2026025", "date": "2026-01-25", "draw": "029", "a8_kill": 8, "a8_ok": true, "t2_b": 1, "t2_s": 9, "t2_g": 1}, {"period": "2026026", "date": "2026-01-26", "draw": "099", "a8_kill": 3, "a8_ok": true, "t2_b": 9, "t2_s": 0, "t2_g": 2}, {"period": "2026027", "date": "2026-01-27", "draw": "126", "a8_kill": 0, "a8_ok": true, "t2_b": 9, "t2_s": 0, "t2_g": 9}, {"period": "2026028", "date": "2026-01-28", "draw": "270", "a8_kill": 7, "a8_ok": false, "t2_b": 6, "t2_s": 1, "t2_g": 2}, {"period": "2026029", "date": "2026-01-29", "draw": "003", "a8_kill": 3, "a8_ok": false, "t2_b": 0, "t2_s": 2, "t2_g": 7}, {"period": "2026030", "date": "2026-01-30", "draw": "134", "a8_kill": 9, "a8_ok": true, "t2_b": 3, "t2_s": 0, "t2_g": 0}, {"period": "2026031", "date": "2026-01-31", "draw": "142", "a8_kill": 2, "a8_ok": false, "t2_b": 4, "t2_s": 1, "t2_g": 3}, {"period": "2026032", "date": "2026-02-01", "draw": "452", "a8_kill": 5, "a8_ok": false, "t2_b": 2, "t2_s": 1, "t2_g": 4}, {"period": "2026033", "date": "2026-02-02", "draw": "119", "a8_kill": 7, "a8_ok": true, "t2_b": 2, "t2_s": 4, "t2_g": 5}, {"period": "2026034", "date": "2026-02-03", "draw": "052", "a8_kill": 8, "a8_ok": true, "t2_b": 9, "t2_s": 1, "t2_g": 1}, {"period": "2026035", "date": "2026-02-04", "draw": "213", "a8_kill": 7, "a8_ok": true, "t2_b": 2, "t2_s": 0, "t2_g": 5}, {"period": "2026036", "date": "2026-02-05", "draw": "762", "a8_kill": 5, "a8_ok": true, "t2_b": 3, "t2_s": 2, "t2_g": 1}, {"period": "2026037", "date": "2026-02-06", "draw": "420", "a8_kill": 0, "a8_ok": false, "t2_b": 2, "t2_s": 7, "t2_g": 6}, {"period": "2026038", "date": "2026-02-07", "draw": "467", "a8_kill": 9, "a8_ok": true, "t2_b": 0, "t2_s": 4, "t2_g": 2}, {"period": "2026039", "date": "2026-02-08", "draw": "450", "a8_kill": 0, "a8_ok": false, "t2_b": 7, "t2_s": 4, "t2_g": 6}, {"period": "2026040", "date": "2026-02-09", "draw": "425", "a8_kill": 7, "a8_ok": true, "t2_b": 0, "t2_s": 4, "t2_g": 5}, {"period": "2026041", "date": "2026-02-10", "draw": "901", "a8_kill": 7, "a8_ok": true, "t2_b": 5, "t2_s": 4, "t2_g": 2}, {"period": "2026042", "date": "2026-02-11", "draw": "854", "a8_kill": 6, "a8_ok": true, "t2_b": 1, "t2_s": 9, "t2_g": 0}, {"period": "2026043", "date": "2026-02-12", "draw": "765", "a8_kill": 0, "a8_ok": true, "t2_b": 4, "t2_s": 8, "t2_g": 5}, {"period": "2026044", "date": "2026-02-13", "draw": "589", "a8_kill": 0, "a8_ok": true, "t2_b": 5, "t2_s": 7, "t2_g": 6}, {"period": "2026045", "date": "2026-02-24", "draw": "181", "a8_kill": 0, "a8_ok": true, "t2_b": 9, "t2_s": 5, "t2_g": 8}, {"period": "2026046", "date": "2026-02-25", "draw": "291", "a8_kill": 5, "a8_ok": true, "t2_b": 1, "t2_s": 1, "t2_g": 8}, {"period": "2026047", "date": "2026-02-26", "draw": "936", "a8_kill": 5, "a8_ok": true, "t2_b": 1, "t2_s": 2, "t2_g": 9}, {"period": "2026048", "date": "2026-02-27", "draw": "612", "a8_kill": 0, "a8_ok": true, "t2_b": 6, "t2_s": 9, "t2_g": 3}, {"period": "2026049", "date": "2026-02-28", "draw": "110", "a8_kill": 7, "a8_ok": true, "t2_b": 2, "t2_s": 6, "t2_g": 1}, {"period": "2026050", "date": "2026-03-01", "draw": "689", "a8_kill": 8, "a8_ok": false, "t2_b": 0, "t2_s": 1, "t2_g": 1}, {"period": "2026051", "date": "2026-03-02", "draw": "302", "a8_kill": 0, "a8_ok": false, "t2_b": 9, "t2_s": 6, "t2_g": 8}, {"period": "2026052", "date": "2026-03-03", "draw": "277", "a8_kill": 5, "a8_ok": true, "t2_b": 2, "t2_s": 3, "t2_g": 0}, {"period": "2026053", "date": "2026-03-04", "draw": "755", "a8_kill": 1, "a8_ok": true, "t2_b": 7, "t2_s": 2, "t2_g": 7}, {"period": "2026054", "date": "2026-03-05", "draw": "217", "a8_kill": 0, "a8_ok": true, "t2_b": 5, "t2_s": 7, "t2_g": 5}, {"period": "2026055", "date": "2026-03-06", "draw": "107", "a8_kill": 5, "a8_ok": true, "t2_b": 7, "t2_s": 2, "t2_g": 1}, {"period": "2026056", "date": "2026-03-07", "draw": "477", "a8_kill": 5, "a8_ok": true, "t2_b": 7, "t2_s": 1, "t2_g": 0}, {"period": "2026057", "date": "2026-03-08", "draw": "264", "a8_kill": 1, "a8_ok": true, "t2_b": 7, "t2_s": 4, "t2_g": 7}, {"period": "2026058", "date": "2026-03-09", "draw": "543", "a8_kill": 1, "a8_ok": true, "t2_b": 4, "t2_s": 2, "t2_g": 6}, {"period": "2026059", "date": "2026-03-10", "draw": "794", "a8_kill": 6, "a8_ok": true, "t2_b": 3, "t2_s": 5, "t2_g": 4}, {"period": "2026060", "date": "2026-03-11", "draw": "943", "a8_kill": 0, "a8_ok": true, "t2_b": 4, "t2_s": 7, "t2_g": 9}, {"period": "2026061", "date": "2026-03-12", "draw": "429", "a8_kill": 5, "a8_ok": true, "t2_b": 3, "t2_s": 9, "t2_g": 4}, {"period": "2026062", "date": "2026-03-13", "draw": "294", "a8_kill": 5, "a8_ok": true, "t2_b": 9, "t2_s": 4, "t2_g": 2}, {"period": "2026063", "date": "2026-03-14", "draw": "517", "a8_kill": 3, "a8_ok": true, "t2_b": 4, "t2_s": 2, "t2_g": 9}, {"period": "2026064", "date": "2026-03-15", "draw": "604", "a8_kill": 0, "a8_ok": false, "t2_b": 7, "t2_s": 5, "t2_g": 1}, {"period": "2026065", "date": "2026-03-16", "draw": "057", "a8_kill": 1, "a8_ok": true, "t2_b": 4, "t2_s": 6, "t2_g": 0}, {"period": "2026066", "date": "2026-03-17", "draw": "934", "a8_kill": 3, "a8_ok": false, "t2_b": 7, "t2_s": 0, "t2_g": 5}, {"period": "2026067", "date": "2026-03-18", "draw": "695", "a8_kill": 5, "a8_ok": false, "t2_b": 4, "t2_s": 9, "t2_g": 3}, {"period": "2026068", "date": "2026-03-19", "draw": "706", "a8_kill": 0, "a8_ok": false, "t2_b": 5, "t2_s": 6, "t2_g": 9}, {"period": "2026069", "date": "2026-03-20", "draw": "908", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 7, "t2_g": 0}, {"period": "2026070", "date": "2026-03-21", "draw": "484", "a8_kill": 1, "a8_ok": true, "t2_b": 8, "t2_s": 9, "t2_g": 0}, {"period": "2026071", "date": "2026-03-22", "draw": "261", "a8_kill": 9, "a8_ok": true, "t2_b": 4, "t2_s": 4, "t2_g": 8}, {"period": "2026072", "date": "2026-03-23", "draw": "245", "a8_kill": 7, "a8_ok": true, "t2_b": 1, "t2_s": 2, "t2_g": 6}, {"period": "2026073", "date": "2026-03-24", "draw": "504", "a8_kill": 7, "a8_ok": true, "t2_b": 5, "t2_s": 2, "t2_g": 4}, {"period": "2026074", "date": "2026-03-25", "draw": "487", "a8_kill": 7, "a8_ok": false, "t2_b": 4, "t2_s": 5, "t2_g": 0}, {"period": "2026075", "date": "2026-03-26", "draw": "816", "a8_kill": 0, "a8_ok": true, "t2_b": 7, "t2_s": 4, "t2_g": 8}, {"period": "2026076", "date": "2026-03-27", "draw": "863", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 8, "t2_g": 1}, {"period": "2026077", "date": "2026-03-28", "draw": "112", "a8_kill": 0, "a8_ok": true, "t2_b": 3, "t2_s": 8, "t2_g": 6}, {"period": "2026078", "date": "2026-03-29", "draw": "049", "a8_kill": 8, "a8_ok": true, "t2_b": 2, "t2_s": 1, "t2_g": 1}, {"period": "2026079", "date": "2026-03-30", "draw": "233", "a8_kill": 3, "a8_ok": false, "t2_b": 9, "t2_s": 0, "t2_g": 4}, {"period": "2026080", "date": "2026-03-31", "draw": "802", "a8_kill": 8, "a8_ok": false, "t2_b": 3, "t2_s": 2, "t2_g": 3}, {"period": "2026081", "date": "2026-04-01", "draw": "827", "a8_kill": 1, "a8_ok": true, "t2_b": 2, "t2_s": 8, "t2_g": 0}, {"period": "2026082", "date": "2026-04-02", "draw": "942", "a8_kill": 1, "a8_ok": true, "t2_b": 7, "t2_s": 8, "t2_g": 2}, {"period": "2026083", "date": "2026-04-03", "draw": "506", "a8_kill": 5, "a8_ok": false, "t2_b": 2, "t2_s": 9, "t2_g": 4}, {"period": "2026084", "date": "2026-04-04", "draw": "456", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 5, "t2_g": 0}, {"period": "2026085", "date": "2026-04-05", "draw": "118", "a8_kill": 0, "a8_ok": true, "t2_b": 6, "t2_s": 4, "t2_g": 5}, {"period": "2026086", "date": "2026-04-06", "draw": "382", "a8_kill": 5, "a8_ok": true, "t2_b": 8, "t2_s": 1, "t2_g": 1}, {"period": "2026087", "date": "2026-04-07", "draw": "911", "a8_kill": 3, "a8_ok": true, "t2_b": 2, "t2_s": 3, "t2_g": 8}, {"period": "2026088", "date": "2026-04-08", "draw": "608", "a8_kill": 8, "a8_ok": false, "t2_b": 1, "t2_s": 9, "t2_g": 1}, {"period": "2026089", "date": "2026-04-09", "draw": "922", "a8_kill": 1, "a8_ok": true, "t2_b": 8, "t2_s": 6, "t2_g": 0}, {"period": "2026090", "date": "2026-04-10", "draw": "816", "a8_kill": 5, "a8_ok": true, "t2_b": 2, "t2_s": 9, "t2_g": 2}, {"period": "2026091", "date": "2026-04-11", "draw": "537", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 8, "t2_g": 1}, {"period": "2026092", "date": "2026-04-12", "draw": "870", "a8_kill": 0, "a8_ok": false, "t2_b": 7, "t2_s": 5, "t2_g": 3}, {"period": "2026093", "date": "2026-04-13", "draw": "518", "a8_kill": 3, "a8_ok": true, "t2_b": 0, "t2_s": 8, "t2_g": 7}, {"period": "2026094", "date": "2026-04-14", "draw": "418", "a8_kill": 0, "a8_ok": true, "t2_b": 8, "t2_s": 5, "t2_g": 1}, {"period": "2026095", "date": "2026-04-15", "draw": "022", "a8_kill": 5, "a8_ok": true, "t2_b": 8, "t2_s": 4, "t2_g": 1}, {"period": "2026096", "date": "2026-04-16", "draw": "689", "a8_kill": 1, "a8_ok": true, "t2_b": 2, "t2_s": 0, "t2_g": 2}, {"period": "2026097", "date": "2026-04-17", "draw": "818", "a8_kill": 0, "a8_ok": true, "t2_b": 9, "t2_s": 6, "t2_g": 8}, {"period": "2026098", "date": "2026-04-18", "draw": "513", "a8_kill": 0, "a8_ok": true, "t2_b": 8, "t2_s": 8, "t2_g": 1}, {"period": "2026099", "date": "2026-04-19", "draw": "877", "a8_kill": 0, "a8_ok": true, "t2_b": 3, "t2_s": 5, "t2_g": 1}, {"period": "2026100", "date": "2026-04-20", "draw": "414", "a8_kill": 0, "a8_ok": true, "t2_b": 7, "t2_s": 8, "t2_g": 7}, {"period": "2026101", "date": "2026-04-21", "draw": "584", "a8_kill": 9, "a8_ok": true, "t2_b": 4, "t2_s": 4, "t2_g": 1}, {"period": "2026102", "date": "2026-04-22", "draw": "420", "a8_kill": 0, "a8_ok": false, "t2_b": 4, "t2_s": 5, "t2_g": 8}, {"period": "2026103", "date": "2026-04-23", "draw": "661", "a8_kill": 9, "a8_ok": true, "t2_b": 0, "t2_s": 4, "t2_g": 2}, {"period": "2026104", "date": "2026-04-24", "draw": "482", "a8_kill": 0, "a8_ok": true, "t2_b": 1, "t2_s": 6, "t2_g": 6}, {"period": "2026105", "date": "2026-04-25", "draw": "631", "a8_kill": 1, "a8_ok": false, "t2_b": 2, "t2_s": 4, "t2_g": 8}, {"period": "2026106", "date": "2026-04-26", "draw": "928", "a8_kill": 6, "a8_ok": true, "t2_b": 1, "t2_s": 6, "t2_g": 3}, {"period": "2026107", "date": "2026-04-27", "draw": "278", "a8_kill": 1, "a8_ok": true, "t2_b": 8, "t2_s": 9, "t2_g": 2}, {"period": "2026108", "date": "2026-04-28", "draw": "671", "a8_kill": 3, "a8_ok": true, "t2_b": 8, "t2_s": 2, "t2_g": 7}, {"period": "2026109", "date": "2026-04-29", "draw": "195", "a8_kill": 3, "a8_ok": true, "t2_b": 1, "t2_s": 6, "t2_g": 7}, {"period": "2026110", "date": "2026-04-30", "draw": "379", "a8_kill": 0, "a8_ok": true, "t2_b": 5, "t2_s": 1, "t2_g": 9}, {"period": "2026111", "date": "2026-05-01", "draw": "863", "a8_kill": 0, "a8_ok": true, "t2_b": 9, "t2_s": 3, "t2_g": 7}, {"period": "2026112", "date": "2026-05-02", "draw": "065", "a8_kill": 0, "a8_ok": false, "t2_b": 3, "t2_s": 8, "t2_g": 6}, {"period": "2026113", "date": "2026-05-03", "draw": "040", "a8_kill": 3, "a8_ok": true, "t2_b": 5, "t2_s": 0, "t2_g": 6}, {"period": "2026114", "date": "2026-05-04", "draw": "864", "a8_kill": 1, "a8_ok": true, "t2_b": 0, "t2_s": 0, "t2_g": 4}, {"period": "2026115", "date": "2026-05-05", "draw": "581", "a8_kill": 1, "a8_ok": false, "t2_b": 4, "t2_s": 8, "t2_g": 6}, {"period": "2026116", "date": "2026-05-06", "draw": "020", "a8_kill": 3, "a8_ok": true, "t2_b": 1, "t2_s": 5, "t2_g": 8}, {"period": "2026117", "date": "2026-05-07", "draw": "411", "a8_kill": 1, "a8_ok": false, "t2_b": 0, "t2_s": 0, "t2_g": 2}, {"period": "2026118", "date": "2026-05-08", "draw": "132", "a8_kill": 8, "a8_ok": true, "t2_b": 1, "t2_s": 4, "t2_g": 1}, {"period": "2026119", "date": "2026-05-09", "draw": "112", "a8_kill": 5, "a8_ok": true, "t2_b": 2, "t2_s": 1, "t2_g": 3}, {"period": "2026120", "date": "2026-05-10", "draw": "734", "a8_kill": 8, "a8_ok": true, "t2_b": 2, "t2_s": 1, "t2_g": 1}, {"period": "2026121", "date": "2026-05-11", "draw": "393", "a8_kill": 6, "a8_ok": true, "t2_b": 4, "t2_s": 7, "t2_g": 3}, {"period": "2026122", "date": "2026-05-12", "draw": "346", "a8_kill": 8, "a8_ok": true, "t2_b": 3, "t2_s": 3, "t2_g": 9}, {"period": "2026123", "date": "2026-05-13", "draw": "200", "a8_kill": 7, "a8_ok": true, "t2_b": 6, "t2_s": 3, "t2_g": 4}, {"period": "2026124", "date": "2026-05-14", "draw": "280", "a8_kill": 1, "a8_ok": true, "t2_b": 0, "t2_s": 2, "t2_g": 0}, {"period": "2026125", "date": "2026-05-15", "draw": "954", "a8_kill": 1, "a8_ok": true, "t2_b": 0, "t2_s": 2, "t2_g": 8}, {"period": "2026126", "date": "2026-05-16", "draw": "846", "a8_kill": 0, "a8_ok": true, "t2_b": 4, "t2_s": 9, "t2_g": 5}, {"period": "2026127", "date": "2026-05-17", "draw": "700", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 8, "t2_g": 4}, {"period": "2026128", "date": "2026-05-18", "draw": "776", "a8_kill": 5, "a8_ok": true, "t2_b": 0, "t2_s": 7, "t2_g": 0}, {"period": "2026129", "date": "2026-05-19", "draw": "023", "a8_kill": 0, "a8_ok": false, "t2_b": 6, "t2_s": 7, "t2_g": 7}, {"period": "2026130", "date": "2026-05-20", "draw": "267", "a8_kill": 5, "a8_ok": true, "t2_b": 3, "t2_s": 0, "t2_g": 2}, {"period": "2026131", "date": "2026-05-21", "draw": "598", "a8_kill": 0, "a8_ok": true, "t2_b": 7, "t2_s": 2, "t2_g": 6}, {"period": "2026132", "date": "2026-05-22", "draw": "756", "a8_kill": 0, "a8_ok": true, "t2_b": 8, "t2_s": 5, "t2_g": 9}, {"period": "2026133", "date": "2026-05-23", "draw": "080", "a8_kill": 0, "a8_ok": false, "t2_b": 6, "t2_s": 7, "t2_g": 5}, {"period": "2026134", "date": "2026-05-24", "draw": "654", "a8_kill": 9, "a8_ok": true, "t2_b": 0, "t2_s": 0, "t2_g": 8}, {"period": "2026135", "date": "2026-05-25", "draw": "487", "a8_kill": 1, "a8_ok": true, "t2_b": 4, "t2_s": 6, "t2_g": 5}, {"period": "2026136", "date": "2026-05-26", "draw": "889", "a8_kill": 0, "a8_ok": true, "t2_b": 7, "t2_s": 4, "t2_g": 8}, {"period": "2026137", "date": "2026-05-27", "draw": "165", "a8_kill": 1, "a8_ok": false, "t2_b": 9, "t2_s": 8, "t2_g": 8}, {"period": "2026138", "date": "2026-05-28", "draw": "790", "a8_kill": 0, "a8_ok": false, "t2_b": 5, "t2_s": 1, "t2_g": 6}, {"period": "2026139", "date": "2026-05-29", "draw": "286", "a8_kill": 4, "a8_ok": true, "t2_b": 0, "t2_s": 7, "t2_g": 9}, {"period": "2026140", "date": "2026-05-30", "draw": "285", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 2, "t2_g": 8}, {"period": "2026141", "date": "2026-05-31", "draw": "397", "a8_kill": 3, "a8_ok": false, "t2_b": 5, "t2_s": 2, "t2_g": 8}, {"period": "2026142", "date": "2026-06-01", "draw": "894", "a8_kill": 0, "a8_ok": true, "t2_b": 7, "t2_s": 3, "t2_g": 9}, {"period": "2026143", "date": "2026-06-02", "draw": "376", "a8_kill": 0, "a8_ok": true, "t2_b": 4, "t2_s": 8, "t2_g": 9}, {"period": "2026144", "date": "2026-06-03", "draw": "726", "a8_kill": 0, "a8_ok": true, "t2_b": 6, "t2_s": 3, "t2_g": 7}, {"period": "2026145", "date": "2026-06-04", "draw": "279", "a8_kill": 0, "a8_ok": true, "t2_b": 6, "t2_s": 7, "t2_g": 2}, {"period": "2026146", "date": "2026-06-05", "draw": "464", "a8_kill": 3, "a8_ok": true, "t2_b": 9, "t2_s": 2, "t2_g": 7}, {"period": "2026147", "date": "2026-06-06", "draw": "712", "a8_kill": 9, "a8_ok": true, "t2_b": 4, "t2_s": 4, "t2_g": 6}, {"period": "2026148", "date": "2026-06-07", "draw": "408", "a8_kill": 5, "a8_ok": true, "t2_b": 2, "t2_s": 7, "t2_g": 1}, {"period": "2026149", "date": "2026-06-08", "draw": "696", "a8_kill": 1, "a8_ok": true, "t2_b": 8, "t2_s": 4, "t2_g": 0}, {"period": "2026150", "date": "2026-06-09", "draw": "720", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 6, "t2_g": 9}, {"period": "2026151", "date": "2026-06-10", "draw": "631", "a8_kill": 5, "a8_ok": true, "t2_b": 0, "t2_s": 7, "t2_g": 2}, {"period": "2026152", "date": "2026-06-11", "draw": "220", "a8_kill": 6, "a8_ok": true, "t2_b": 1, "t2_s": 6, "t2_g": 3}, {"period": "2026153", "date": "2026-06-12", "draw": "887", "a8_kill": 1, "a8_ok": true, "t2_b": 0, "t2_s": 2, "t2_g": 2}, {"period": "2026154", "date": "2026-06-13", "draw": "377", "a8_kill": 1, "a8_ok": true, "t2_b": 7, "t2_s": 8, "t2_g": 8}, {"period": "2026155", "date": "2026-06-14", "draw": "409", "a8_kill": 0, "a8_ok": false, "t2_b": 7, "t2_s": 3, "t2_g": 7}, {"period": "2026156", "date": "2026-06-15", "draw": "162", "a8_kill": 3, "a8_ok": true, "t2_b": 9, "t2_s": 4, "t2_g": 0}, {"period": "2026157", "date": "2026-06-16", "draw": "327", "a8_kill": 7, "a8_ok": false, "t2_b": 2, "t2_s": 1, "t2_g": 6}, {"period": "2026158", "date": "2026-06-17", "draw": "178", "a8_kill": 6, "a8_ok": true, "t2_b": 7, "t2_s": 3, "t2_g": 2}, {"period": "2026159", "date": "2026-06-18", "draw": "995", "a8_kill": 3, "a8_ok": true, "t2_b": 8, "t2_s": 1, "t2_g": 7}, {"period": "2026160", "date": "2026-06-19", "draw": "332", "a8_kill": 0, "a8_ok": true, "t2_b": 5, "t2_s": 9, "t2_g": 9}, {"period": "2026161", "date": "2026-06-20", "draw": "529", "a8_kill": 8, "a8_ok": true, "t2_b": 2, "t2_s": 3, "t2_g": 3}, {"period": "2026162", "date": "2026-06-21", "draw": "585", "a8_kill": 0, "a8_ok": true, "t2_b": 9, "t2_s": 5, "t2_g": 2}, {"period": "2026163", "date": "2026-06-22", "draw": "537", "a8_kill": 0, "a8_ok": true, "t2_b": 5, "t2_s": 5, "t2_g": 8}, {"period": "2026164", "date": "2026-06-23", "draw": "690", "a8_kill": 0, "a8_ok": false, "t2_b": 7, "t2_s": 5, "t2_g": 3}, {"period": "2026165", "date": "2026-06-24", "draw": "424", "a8_kill": 1, "a8_ok": true, "t2_b": 0, "t2_s": 6, "t2_g": 9}, {"period": "2026166", "date": "2026-06-25", "draw": "900", "a8_kill": 1, "a8_ok": true, "t2_b": 4, "t2_s": 4, "t2_g": 2}, {"period": "2026167", "date": "2026-06-26", "draw": "631", "a8_kill": 9, "a8_ok": true, "t2_b": 0, "t2_s": 9, "t2_g": 0}, {"period": "2026168", "date": "2026-06-27", "draw": "130", "a8_kill": 6, "a8_ok": true, "t2_b": 1, "t2_s": 6, "t2_g": 3}, {"period": "2026169", "date": "2026-06-28", "draw": "832", "a8_kill": 2, "a8_ok": false, "t2_b": 0, "t2_s": 1, "t2_g": 3}, {"period": "2026170", "date": "2026-06-29", "draw": "805", "a8_kill": 5, "a8_ok": false, "t2_b": 2, "t2_s": 8, "t2_g": 3}, {"period": "2026171", "date": "2026-06-30", "draw": "134", "a8_kill": 1, "a8_ok": false, "t2_b": 5, "t2_s": 8, "t2_g": 0}, {"period": "2026172", "date": "2026-07-01", "draw": "445", "a8_kill": 2, "a8_ok": true, "t2_b": 4, "t2_s": 1, "t2_g": 3}, {"period": "2026173", "date": "2026-07-02", "draw": "677", "a8_kill": 9, "a8_ok": true, "t2_b": 5, "t2_s": 4, "t2_g": 4}, {"period": "2026174", "date": "2026-07-03", "draw": "618", "a8_kill": 0, "a8_ok": true, "t2_b": 7, "t2_s": 6, "t2_g": 7}, {"period": "2026175", "date": "2026-07-04", "draw": "421", "a8_kill": 1, "a8_ok": false, "t2_b": 8, "t2_s": 6, "t2_g": 1}, {"period": "2026176", "date": "2026-07-05", "draw": "269", "a8_kill": 5, "a8_ok": true, "t2_b": 1, "t2_s": 4, "t2_g": 2}, {"period": "2026177", "date": "2026-07-06", "draw": "808", "a8_kill": 3, "a8_ok": true, "t2_b": 9, "t2_s": 2, "t2_g": 6}, {"period": "2026178", "date": "2026-07-07", "draw": "266", "a8_kill": 1, "a8_ok": true, "t2_b": 8, "t2_s": 8, "t2_g": 0}, {"period": "2026179", "date": "2026-07-08", "draw": "993", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 2, "t2_g": 6}, {"period": "2026180", "date": "2026-07-09", "draw": "520", "a8_kill": 0, "a8_ok": false, "t2_b": 3, "t2_s": 9, "t2_g": 9}, {"period": "2026181", "date": "2026-07-10", "draw": "818", "a8_kill": 7, "a8_ok": true, "t2_b": 0, "t2_s": 5, "t2_g": 2}, {"period": "2026182", "date": "2026-07-11", "draw": "662", "a8_kill": 0, "a8_ok": true, "t2_b": 8, "t2_s": 8, "t2_g": 1}, {"period": "2026183", "date": "2026-07-12", "draw": "923", "a8_kill": 1, "a8_ok": true, "t2_b": 2, "t2_s": 6, "t2_g": 6}, {"period": "2026184", "date": "2026-07-13", "draw": "902", "a8_kill": 5, "a8_ok": true, "t2_b": 3, "t2_s": 9, "t2_g": 2}, {"period": "2026185", "date": "2026-07-14", "draw": "397", "a8_kill": 1, "a8_ok": true, "t2_b": 2, "t2_s": 9, "t2_g": 0}, {"period": "2026186", "date": "2026-07-15", "draw": "045", "a8_kill": 0, "a8_ok": false, "t2_b": 7, "t2_s": 3, "t2_g": 9}, {"period": "2026187", "date": "2026-07-16", "draw": "023", "a8_kill": 7, "a8_ok": true, "t2_b": 5, "t2_s": 0, "t2_g": 4}, {"period": "2026188", "date": "2026-07-17", "draw": "969", "a8_kill": 5, "a8_ok": true, "t2_b": 3, "t2_s": 0, "t2_g": 2}, {"period": "2026189", "date": "2026-07-18", "draw": "558", "a8_kill": 0, "a8_ok": true, "t2_b": 9, "t2_s": 9, "t2_g": 6}, {"period": "2026190", "date": "2026-07-19", "draw": "026", "a8_kill": 0, "a8_ok": false, "t2_b": 8, "t2_s": 5, "t2_g": 5}, {"period": "2026191", "date": "2026-07-20", "draw": "906", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 0, "t2_g": 2}, {"period": "2026192", "date": "2026-07-21", "draw": "425", "a8_kill": 1, "a8_ok": true, "t2_b": 6, "t2_s": 9, "t2_g": 0}, {"period": "2026193", "date": "2026-07-22", "draw": "254", "a8_kill": 7, "a8_ok": true, "t2_b": 5, "t2_s": 4, "t2_g": 2}, {"period": "2026194", "date": "2026-07-23", "draw": "283", "a8_kill": 7, "a8_ok": true, "t2_b": 4, "t2_s": 2, "t2_g": 5}, {"period": "2026195", "date": "2026-07-24", "draw": "275", "a8_kill": 3, "a8_ok": true, "t2_b": 3, "t2_s": 2, "t2_g": 8}, {"period": "2026196", "date": "2026-07-25", "draw": "419", "a8_kill": 0, "a8_ok": true, "t2_b": 5, "t2_s": 2, "t2_g": 7}, {"period": "2026197", "date": "2026-07-26", "draw": "232", "a8_kill": 5, "a8_ok": true, "t2_b": 9, "t2_s": 4, "t2_g": 1}, {"period": "2026198", "date": "2026-07-27", "draw": "685", "a8_kill": 9, "a8_ok": true, "t2_b": 2, "t2_s": 2, "t2_g": 3}, {"period": "2026199", "date": "2026-07-28", "draw": "591", "a8_kill": 1, "a8_ok": false, "t2_b": 5, "t2_s": 6, "t2_g": 8}, {"period": "2026200", "date": "2026-07-29", "draw": "912", "a8_kill": 0, "a8_ok": true, "t2_b": 1, "t2_s": 5, "t2_g": 9}, {"period": "2026201", "date": "2026-07-30", "draw": "321", "a8_kill": 5, "a8_ok": true, "t2_b": 2, "t2_s": 9, "t2_g": 1}, {"period": "2026202", "date": "2026-07-31", "draw": "988", "a8_kill": 5, "a8_ok": true, "t2_b": 1, "t2_s": 3, "t2_g": 2}, {"period": "2026203", "date": "2026-08-01", "draw": "435", "a8_kill": 1, "a8_ok": true, "t2_b": 8, "t2_s": 9, "t2_g": 8}, {"period": "2026204", "date": "2026-08-02", "draw": "978", "a8_kill": null, "a8_ok": null, "t2_b": 5, "t2_s": 4, "t2_g": 3}];
+
+// VIP专属数据（base64编码，非VIP用户看不到明文）
+const VIP_B64 = 'eyJhOV9raWxsIjogMSwgImE5X3Byb2JhIjogMC43OTkxLCAiYTExX2tpbGwiOiA1LCAiYTExX3Byb2JhIjogMC44NzE0LCAiZDFfa2lsbCI6IDgsICJkMV9wcm9iYSI6IDAuMDEyOSwgImQyX2tpbGwiOiA4LCAiZDJfcHJvYmEiOiAwLjAzODMsICJqb2ludF9raWxscyI6IFswLCAxLCA1LCA4XSwgImJlc3RfZ3JvdXAiOiAiRzIiLCAiYmVzdF9jb2RlcyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgImJlc3RfbWlzcyI6IDE0LCAib21pc3Npb25zIjogeyJHMCI6IHsiY29kZXMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtaXNzIjogMX0sICJHMSI6IHsiY29kZXMiOiBbMCwgMiwgMywgNSwgNywgOF0sICJtaXNzIjogOX0sICJHMiI6IHsiY29kZXMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtaXNzIjogMTR9LCAiRzMiOiB7ImNvZGVzIjogWzAsIDIsIDQsIDUsIDgsIDldLCAibWlzcyI6IDExfSwgIkc0IjogeyJjb2RlcyI6IFsxLCAyLCA0LCA1LCA3LCA4XSwgIm1pc3MiOiA5fSwgIkc1IjogeyJjb2RlcyI6IFsyLCAzLCA0LCA1LCA3LCA5XSwgIm1pc3MiOiAxfSwgIkc2IjogeyJjb2RlcyI6IFswLCAyLCA2LCA3LCA4LCA5XSwgIm1pc3MiOiAwfSwgIkc3IjogeyJjb2RlcyI6IFsxLCAyLCA0LCA1LCA2LCA4XSwgIm1pc3MiOiA2fSwgIkc4IjogeyJjb2RlcyI6IFsyLCA0LCA1LCA2LCA4LCA5XSwgIm1pc3MiOiA2fSwgIkc5IjogeyJjb2RlcyI6IFsxLCAyLCA0LCA1LCA4LCA5XSwgIm1pc3MiOiA0fX0sICJoaXN0b3J5X3ZpcCI6IFt7InAiOiAiMjAyNjAwMSIsICJhOWsiOiAxLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAwLCAiYTExbyI6IHRydWUsICJkYWsiOiA2LCAiZGFvIjogdHJ1ZSwgImQyayI6IDAsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMDIiLCAiYTlrIjogMCwgImE5byI6IGZhbHNlLCAiYTExayI6IDYsICJhMTFvIjogdHJ1ZSwgImRhayI6IDYsICJkYW8iOiB0cnVlLCAiZDJrIjogMCwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMDMiLCAiYTlrIjogMSwgImE5byI6IGZhbHNlLCAiYTExayI6IDYsICJhMTFvIjogZmFsc2UsICJkYWsiOiAxLCAiZGFvIjogZmFsc2UsICJkMmsiOiAxLCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjAwNCIsICJhOWsiOiAxLCAiYTlvIjogZmFsc2UsICJhMTFrIjogMiwgImExMW8iOiB0cnVlLCAiZGFrIjogMiwgImRhbyI6IHRydWUsICJkMmsiOiAyLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDA1IiwgImE5ayI6IDEsICJhOW8iOiB0cnVlLCAiYTExayI6IDIsICJhMTFvIjogdHJ1ZSwgImRhayI6IDEsICJkYW8iOiB0cnVlLCAiZDJrIjogMSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAwNiIsICJhOWsiOiAxLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA5LCAiYTExbyI6IHRydWUsICJkYWsiOiA5LCAiZGFvIjogdHJ1ZSwgImQyayI6IDAsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMDciLCAiYTlrIjogNiwgImE5byI6IHRydWUsICJhMTFrIjogNiwgImExMW8iOiB0cnVlLCAiZGFrIjogNiwgImRhbyI6IHRydWUsICJkMmsiOiA2LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDA4IiwgImE5ayI6IDYsICJhOW8iOiB0cnVlLCAiYTExayI6IDksICJhMTFvIjogdHJ1ZSwgImRhayI6IDYsICJkYW8iOiB0cnVlLCAiZDJrIjogNiwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAwOSIsICJhOWsiOiA2LCAiYTlvIjogZmFsc2UsICJhMTFrIjogNSwgImExMW8iOiBmYWxzZSwgImRhayI6IDYsICJkYW8iOiBmYWxzZSwgImQyayI6IDYsICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MDEwIiwgImE5ayI6IDQsICJhOW8iOiB0cnVlLCAiYTExayI6IDksICJhMTFvIjogdHJ1ZSwgImRhayI6IDQsICJkYW8iOiB0cnVlLCAiZDJrIjogNCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAxMSIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA5LCAiYTExbyI6IHRydWUsICJkYWsiOiA1LCAiZGFvIjogdHJ1ZSwgImQyayI6IDUsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMTIiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogOSwgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDEzIiwgImE5ayI6IDQsICJhOW8iOiB0cnVlLCAiYTExayI6IDcsICJhMTFvIjogdHJ1ZSwgImRhayI6IDQsICJkYW8iOiB0cnVlLCAiZDJrIjogNiwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAxNCIsICJhOWsiOiA0LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAxLCAiYTExbyI6IHRydWUsICJkYWsiOiA0LCAiZGFvIjogdHJ1ZSwgImQyayI6IDQsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMTUiLCAiYTlrIjogMSwgImE5byI6IHRydWUsICJhMTFrIjogNCwgImExMW8iOiB0cnVlLCAiZGFrIjogMSwgImRhbyI6IHRydWUsICJkMmsiOiAxLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDE2IiwgImE5ayI6IDQsICJhOW8iOiB0cnVlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDQsICJkYW8iOiB0cnVlLCAiZDJrIjogNCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAxNyIsICJhOWsiOiAzLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAxLCAiYTExbyI6IHRydWUsICJkYWsiOiAzLCAiZGFvIjogdHJ1ZSwgImQyayI6IDMsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMTgiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogMSwgImExMW8iOiB0cnVlLCAiZGFrIjogMSwgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDE5IiwgImE5ayI6IDgsICJhOW8iOiB0cnVlLCAiYTExayI6IDksICJhMTFvIjogdHJ1ZSwgImRhayI6IDgsICJkYW8iOiB0cnVlLCAiZDJrIjogNSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAyMCIsICJhOWsiOiA5LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA5LCAiYTExbyI6IHRydWUsICJkYWsiOiA5LCAiZGFvIjogdHJ1ZSwgImQyayI6IDksICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMjEiLCAiYTlrIjogMiwgImE5byI6IHRydWUsICJhMTFrIjogMSwgImExMW8iOiB0cnVlLCAiZGFrIjogMiwgImRhbyI6IHRydWUsICJkMmsiOiAyLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDIyIiwgImE5ayI6IDksICJhOW8iOiB0cnVlLCAiYTExayI6IDksICJhMTFvIjogdHJ1ZSwgImRhayI6IDksICJkYW8iOiB0cnVlLCAiZDJrIjogOSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAyMyIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA1LCAiYTExbyI6IHRydWUsICJkYWsiOiA1LCAiZGFvIjogdHJ1ZSwgImQyayI6IDUsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMjQiLCAiYTlrIjogOCwgImE5byI6IHRydWUsICJhMTFrIjogNSwgImExMW8iOiB0cnVlLCAiZGFrIjogOCwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDI1IiwgImE5ayI6IDgsICJhOW8iOiB0cnVlLCAiYTExayI6IDgsICJhMTFvIjogdHJ1ZSwgImRhayI6IDgsICJkYW8iOiB0cnVlLCAiZDJrIjogOCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAyNiIsICJhOWsiOiAxLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA4LCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMjciLCAiYTlrIjogMiwgImE5byI6IGZhbHNlLCAiYTExayI6IDEsICJhMTFvIjogZmFsc2UsICJkYWsiOiAyLCAiZGFvIjogZmFsc2UsICJkMmsiOiAyLCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjAyOCIsICJhOWsiOiA5LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA5LCAiYTExbyI6IHRydWUsICJkYWsiOiA5LCAiZGFvIjogdHJ1ZSwgImQyayI6IDksICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMjkiLCAiYTlrIjogMiwgImE5byI6IHRydWUsICJhMTFrIjogNiwgImExMW8iOiB0cnVlLCAiZGFrIjogMiwgImRhbyI6IHRydWUsICJkMmsiOiAyLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDMwIiwgImE5ayI6IDAsICJhOW8iOiB0cnVlLCAiYTExayI6IDAsICJhMTFvIjogdHJ1ZSwgImRhayI6IDAsICJkYW8iOiB0cnVlLCAiZDJrIjogMCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAzMSIsICJhOWsiOiA2LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAwLCAiYTExbyI6IHRydWUsICJkYWsiOiAwLCAiZGFvIjogdHJ1ZSwgImQyayI6IDAsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMzIiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogOSwgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDMzIiwgImE5ayI6IDMsICJhOW8iOiB0cnVlLCAiYTExayI6IDksICJhMTFvIjogZmFsc2UsICJkYWsiOiAzLCAiZGFvIjogdHJ1ZSwgImQyayI6IDMsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMzQiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogOSwgImExMW8iOiB0cnVlLCAiZGFrIjogOSwgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDM1IiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDMsICJhMTFvIjogZmFsc2UsICJkYWsiOiA1LCAiZGFvIjogdHJ1ZSwgImQyayI6IDUsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMzYiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogMCwgImExMW8iOiB0cnVlLCAiZGFrIjogMCwgImRhbyI6IHRydWUsICJkMmsiOiAwLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDM3IiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDUsICJkYW8iOiB0cnVlLCAiZDJrIjogMSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjAzOCIsICJhOWsiOiAzLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAxLCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwMzkiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogNiwgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IHRydWUsICJkMmsiOiA2LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDQwIiwgImE5ayI6IDUsICJhOW8iOiBmYWxzZSwgImExMWsiOiAxLCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwNDEiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogMSwgImExMW8iOiBmYWxzZSwgImRhayI6IDUsICJkYW8iOiB0cnVlLCAiZDJrIjogNSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA0MiIsICJhOWsiOiA1LCAiYTlvIjogZmFsc2UsICJhMTFrIjogMSwgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IGZhbHNlLCAiZDJrIjogNSwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYwNDMiLCAiYTlrIjogNSwgImE5byI6IGZhbHNlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDUsICJkYW8iOiBmYWxzZSwgImQyayI6IDksICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwNDQiLCAiYTlrIjogNSwgImE5byI6IGZhbHNlLCAiYTExayI6IDksICJhMTFvIjogZmFsc2UsICJkYWsiOiA1LCAiZGFvIjogZmFsc2UsICJkMmsiOiA1LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjA0NSIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAyLCAiYTExbyI6IHRydWUsICJkYWsiOiA1LCAiZGFvIjogdHJ1ZSwgImQyayI6IDUsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwNDYiLCAiYTlrIjogOCwgImE5byI6IHRydWUsICJhMTFrIjogOSwgImExMW8iOiBmYWxzZSwgImRhayI6IDksICJkYW8iOiBmYWxzZSwgImQyayI6IDksICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MDQ3IiwgImE5ayI6IDgsICJhOW8iOiB0cnVlLCAiYTExayI6IDgsICJhMTFvIjogdHJ1ZSwgImRhayI6IDgsICJkYW8iOiB0cnVlLCAiZDJrIjogOCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA0OCIsICJhOWsiOiA5LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA4LCAiYTExbyI6IHRydWUsICJkYWsiOiA5LCAiZGFvIjogdHJ1ZSwgImQyayI6IDgsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwNDkiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogMywgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDUwIiwgImE5ayI6IDMsICJhOW8iOiB0cnVlLCAiYTExayI6IDMsICJhMTFvIjogdHJ1ZSwgImRhayI6IDMsICJkYW8iOiB0cnVlLCAiZDJrIjogMywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA1MSIsICJhOWsiOiAzLCAiYTlvIjogZmFsc2UsICJhMTFrIjogMSwgImExMW8iOiB0cnVlLCAiZGFrIjogMSwgImRhbyI6IHRydWUsICJkMmsiOiAxLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDUyIiwgImE5ayI6IDQsICJhOW8iOiB0cnVlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDEsICJkYW8iOiB0cnVlLCAiZDJrIjogMSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA1MyIsICJhOWsiOiA4LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAwLCAiYTExbyI6IHRydWUsICJkYWsiOiA4LCAiZGFvIjogdHJ1ZSwgImQyayI6IDAsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwNTQiLCAiYTlrIjogNCwgImE5byI6IHRydWUsICJhMTFrIjogMCwgImExMW8iOiB0cnVlLCAiZGFrIjogMCwgImRhbyI6IHRydWUsICJkMmsiOiAwLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDU1IiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDcsICJhMTFvIjogZmFsc2UsICJkYWsiOiA3LCAiZGFvIjogZmFsc2UsICJkMmsiOiA3LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjA1NiIsICJhOWsiOiAxLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA1LCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwNTciLCAiYTlrIjogOCwgImE5byI6IHRydWUsICJhMTFrIjogMSwgImExMW8iOiB0cnVlLCAiZGFrIjogMSwgImRhbyI6IHRydWUsICJkMmsiOiAxLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDU4IiwgImE5ayI6IDgsICJhOW8iOiB0cnVlLCAiYTExayI6IDAsICJhMTFvIjogdHJ1ZSwgImRhayI6IDcsICJkYW8iOiB0cnVlLCAiZDJrIjogOCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA1OSIsICJhOWsiOiA4LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAxLCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwNjAiLCAiYTlrIjogNywgImE5byI6IHRydWUsICJhMTFrIjogMiwgImExMW8iOiB0cnVlLCAiZGFrIjogMiwgImRhbyI6IHRydWUsICJkMmsiOiA3LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDYxIiwgImE5ayI6IDIsICJhOW8iOiBmYWxzZSwgImExMWsiOiAyLCAiYTExbyI6IGZhbHNlLCAiZGFrIjogMiwgImRhbyI6IGZhbHNlLCAiZDJrIjogMiwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYwNjIiLCAiYTlrIjogMiwgImE5byI6IGZhbHNlLCAiYTExayI6IDQsICJhMTFvIjogZmFsc2UsICJkYWsiOiA0LCAiZGFvIjogZmFsc2UsICJkMmsiOiA0LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjA2MyIsICJhOWsiOiAzLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA0LCAiYTExbyI6IHRydWUsICJkYWsiOiA0LCAiZGFvIjogdHJ1ZSwgImQyayI6IDQsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwNjQiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogNCwgImExMW8iOiBmYWxzZSwgImRhayI6IDQsICJkYW8iOiBmYWxzZSwgImQyayI6IDQsICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MDY1IiwgImE5ayI6IDEsICJhOW8iOiB0cnVlLCAiYTExayI6IDksICJhMTFvIjogdHJ1ZSwgImRhayI6IDksICJkYW8iOiB0cnVlLCAiZDJrIjogOSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA2NiIsICJhOWsiOiA5LCAiYTlvIjogZmFsc2UsICJhMTFrIjogMiwgImExMW8iOiB0cnVlLCAiZGFrIjogOSwgImRhbyI6IGZhbHNlLCAiZDJrIjogMiwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA2NyIsICJhOWsiOiAxLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA0LCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwNjgiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogNCwgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDY5IiwgImE5ayI6IDksICJhOW8iOiBmYWxzZSwgImExMWsiOiA5LCAiYTExbyI6IGZhbHNlLCAiZGFrIjogOSwgImRhbyI6IGZhbHNlLCAiZDJrIjogOSwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYwNzAiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogMiwgImExMW8iOiB0cnVlLCAiZGFrIjogMiwgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDcxIiwgImE5ayI6IDgsICJhOW8iOiB0cnVlLCAiYTExayI6IDQsICJhMTFvIjogdHJ1ZSwgImRhayI6IDQsICJkYW8iOiB0cnVlLCAiZDJrIjogOSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA3MiIsICJhOWsiOiA4LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA1LCAiYTExbyI6IGZhbHNlLCAiZGFrIjogOCwgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDczIiwgImE5ayI6IDgsICJhOW8iOiB0cnVlLCAiYTExayI6IDAsICJhMTFvIjogZmFsc2UsICJkYWsiOiAwLCAiZGFvIjogZmFsc2UsICJkMmsiOiA4LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDc0IiwgImE5ayI6IDgsICJhOW8iOiBmYWxzZSwgImExMWsiOiAwLCAiYTExbyI6IHRydWUsICJkYWsiOiAwLCAiZGFvIjogdHJ1ZSwgImQyayI6IDgsICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MDc1IiwgImE5ayI6IDQsICJhOW8iOiB0cnVlLCAiYTExayI6IDAsICJhMTFvIjogdHJ1ZSwgImRhayI6IDQsICJkYW8iOiB0cnVlLCAiZDJrIjogNCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA3NiIsICJhOWsiOiA4LCAiYTlvIjogZmFsc2UsICJhMTFrIjogMCwgImExMW8iOiB0cnVlLCAiZGFrIjogMCwgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjA3NyIsICJhOWsiOiA3LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAxLCAiYTExbyI6IGZhbHNlLCAiZGFrIjogNywgImRhbyI6IHRydWUsICJkMmsiOiA3LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDc4IiwgImE5ayI6IDcsICJhOW8iOiB0cnVlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDcsICJkYW8iOiB0cnVlLCAiZDJrIjogNywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA3OSIsICJhOWsiOiAzLCAiYTlvIjogZmFsc2UsICJhMTFrIjogMSwgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IGZhbHNlLCAiZDJrIjogMywgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYwODAiLCAiYTlrIjogNiwgImE5byI6IHRydWUsICJhMTFrIjogMiwgImExMW8iOiBmYWxzZSwgImRhayI6IDYsICJkYW8iOiB0cnVlLCAiZDJrIjogNiwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA4MSIsICJhOWsiOiAzLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAzLCAiYTExbyI6IHRydWUsICJkYWsiOiAzLCAiZGFvIjogdHJ1ZSwgImQyayI6IDMsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwODIiLCAiYTlrIjogMiwgImE5byI6IGZhbHNlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDIsICJkYW8iOiBmYWxzZSwgImQyayI6IDIsICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MDgzIiwgImE5ayI6IDMsICJhOW8iOiB0cnVlLCAiYTExayI6IDIsICJhMTFvIjogdHJ1ZSwgImRhayI6IDIsICJkYW8iOiB0cnVlLCAiZDJrIjogMiwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA4NCIsICJhOWsiOiAwLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAyLCAiYTExbyI6IHRydWUsICJkYWsiOiAyLCAiZGFvIjogdHJ1ZSwgImQyayI6IDIsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwODUiLCAiYTlrIjogMCwgImE5byI6IHRydWUsICJhMTFrIjogMiwgImExMW8iOiB0cnVlLCAiZGFrIjogMCwgImRhbyI6IHRydWUsICJkMmsiOiAwLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDg2IiwgImE5ayI6IDAsICJhOW8iOiB0cnVlLCAiYTExayI6IDAsICJhMTFvIjogdHJ1ZSwgImRhayI6IDAsICJkYW8iOiB0cnVlLCAiZDJrIjogMCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA4NyIsICJhOWsiOiAwLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAyLCAiYTExbyI6IHRydWUsICJkYWsiOiAwLCAiZGFvIjogdHJ1ZSwgImQyayI6IDAsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwODgiLCAiYTlrIjogMCwgImE5byI6IGZhbHNlLCAiYTExayI6IDIsICJhMTFvIjogdHJ1ZSwgImRhayI6IDIsICJkYW8iOiB0cnVlLCAiZDJrIjogMiwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA4OSIsICJhOWsiOiAwLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAyLCAiYTExbyI6IGZhbHNlLCAiZGFrIjogMiwgImRhbyI6IGZhbHNlLCAiZDJrIjogMiwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYwOTAiLCAiYTlrIjogOCwgImE5byI6IGZhbHNlLCAiYTExayI6IDcsICJhMTFvIjogdHJ1ZSwgImRhayI6IDcsICJkYW8iOiB0cnVlLCAiZDJrIjogOCwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYwOTEiLCAiYTlrIjogMSwgImE5byI6IHRydWUsICJhMTFrIjogMCwgImExMW8iOiB0cnVlLCAiZGFrIjogMSwgImRhbyI6IHRydWUsICJkMmsiOiAxLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDkyIiwgImE5ayI6IDAsICJhOW8iOiBmYWxzZSwgImExMWsiOiAyLCAiYTExbyI6IHRydWUsICJkYWsiOiAwLCAiZGFvIjogZmFsc2UsICJkMmsiOiAyLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDkzIiwgImE5ayI6IDcsICJhOW8iOiB0cnVlLCAiYTExayI6IDcsICJhMTFvIjogdHJ1ZSwgImRhayI6IDcsICJkYW8iOiB0cnVlLCAiZDJrIjogNywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjA5NCIsICJhOWsiOiAzLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA3LCAiYTExbyI6IHRydWUsICJkYWsiOiA3LCAiZGFvIjogdHJ1ZSwgImQyayI6IDcsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYwOTUiLCAiYTlrIjogOSwgImE5byI6IHRydWUsICJhMTFrIjogNywgImExMW8iOiB0cnVlLCAiZGFrIjogNywgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDk2IiwgImE5ayI6IDksICJhOW8iOiBmYWxzZSwgImExMWsiOiA3LCAiYTExbyI6IHRydWUsICJkYWsiOiA5LCAiZGFvIjogZmFsc2UsICJkMmsiOiA4LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjA5NyIsICJhOWsiOiA2LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAxLCAiYTExbyI6IGZhbHNlLCAiZGFrIjogMSwgImRhbyI6IGZhbHNlLCAiZDJrIjogMSwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYwOTgiLCAiYTlrIjogOSwgImE5byI6IHRydWUsICJhMTFrIjogMiwgImExMW8iOiB0cnVlLCAiZGFrIjogMiwgImRhbyI6IHRydWUsICJkMmsiOiAyLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MDk5IiwgImE5ayI6IDksICJhOW8iOiB0cnVlLCAiYTExayI6IDIsICJhMTFvIjogdHJ1ZSwgImRhayI6IDIsICJkYW8iOiB0cnVlLCAiZDJrIjogMiwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEwMCIsICJhOWsiOiA5LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAyLCAiYTExbyI6IHRydWUsICJkYWsiOiA5LCAiZGFvIjogdHJ1ZSwgImQyayI6IDIsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMDEiLCAiYTlrIjogNywgImE5byI6IHRydWUsICJhMTFrIjogMiwgImExMW8iOiB0cnVlLCAiZGFrIjogNywgImRhbyI6IHRydWUsICJkMmsiOiAyLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTAyIiwgImE5ayI6IDcsICJhOW8iOiB0cnVlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDEsICJkYW8iOiB0cnVlLCAiZDJrIjogMSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEwMyIsICJhOWsiOiA3LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAyLCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogZmFsc2UsICJkMmsiOiAyLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTA0IiwgImE5ayI6IDksICJhOW8iOiB0cnVlLCAiYTExayI6IDcsICJhMTFvIjogdHJ1ZSwgImRhayI6IDcsICJkYW8iOiB0cnVlLCAiZDJrIjogOSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEwNSIsICJhOWsiOiAyLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAyLCAiYTExbyI6IHRydWUsICJkYWsiOiAyLCAiZGFvIjogdHJ1ZSwgImQyayI6IDIsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMDYiLCAiYTlrIjogOSwgImE5byI6IGZhbHNlLCAiYTExayI6IDksICJhMTFvIjogZmFsc2UsICJkYWsiOiA5LCAiZGFvIjogZmFsc2UsICJkMmsiOiA5LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjEwNyIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA5LCAiYTExbyI6IHRydWUsICJkYWsiOiA1LCAiZGFvIjogdHJ1ZSwgImQyayI6IDUsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMDgiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogOCwgImExMW8iOiB0cnVlLCAiZGFrIjogOCwgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTA5IiwgImE5ayI6IDUsICJhOW8iOiBmYWxzZSwgImExMWsiOiAyLCAiYTExbyI6IHRydWUsICJkYWsiOiAyLCAiZGFvIjogdHJ1ZSwgImQyayI6IDIsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMTAiLCAiYTlrIjogNywgImE5byI6IGZhbHNlLCAiYTExayI6IDAsICJhMTFvIjogdHJ1ZSwgImRhayI6IDcsICJkYW8iOiBmYWxzZSwgImQyayI6IDcsICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MTExIiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDIsICJhMTFvIjogdHJ1ZSwgImRhayI6IDUsICJkYW8iOiB0cnVlLCAiZDJrIjogNSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjExMiIsICJhOWsiOiA1LCAiYTlvIjogZmFsc2UsICJhMTFrIjogOSwgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IGZhbHNlLCAiZDJrIjogOSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjExMyIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA2LCAiYTExbyI6IHRydWUsICJkYWsiOiA1LCAiZGFvIjogdHJ1ZSwgImQyayI6IDUsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMTQiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogMCwgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTE1IiwgImE5ayI6IDUsICJhOW8iOiBmYWxzZSwgImExMWsiOiAwLCAiYTExbyI6IHRydWUsICJkYWsiOiA1LCAiZGFvIjogZmFsc2UsICJkMmsiOiA1LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjExNiIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA2LCAiYTExbyI6IHRydWUsICJkYWsiOiA1LCAiZGFvIjogdHJ1ZSwgImQyayI6IDUsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMTciLCAiYTlrIjogMCwgImE5byI6IHRydWUsICJhMTFrIjogNiwgImExMW8iOiB0cnVlLCAiZGFrIjogNiwgImRhbyI6IHRydWUsICJkMmsiOiA2LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTE4IiwgImE5ayI6IDYsICJhOW8iOiB0cnVlLCAiYTExayI6IDAsICJhMTFvIjogdHJ1ZSwgImRhayI6IDAsICJkYW8iOiB0cnVlLCAiZDJrIjogNiwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjExOSIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAyLCAiYTExbyI6IGZhbHNlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTIwIiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDAsICJhMTFvIjogdHJ1ZSwgImRhayI6IDUsICJkYW8iOiB0cnVlLCAiZDJrIjogNSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEyMSIsICJhOWsiOiAzLCAiYTlvIjogZmFsc2UsICJhMTFrIjogMSwgImExMW8iOiB0cnVlLCAiZGFrIjogMSwgImRhbyI6IHRydWUsICJkMmsiOiAxLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTIyIiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDIsICJhMTFvIjogdHJ1ZSwgImRhayI6IDEsICJkYW8iOiB0cnVlLCAiZDJrIjogNSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEyMyIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAxLCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMjQiLCAiYTlrIjogMCwgImE5byI6IGZhbHNlLCAiYTExayI6IDMsICJhMTFvIjogdHJ1ZSwgImRhayI6IDMsICJkYW8iOiB0cnVlLCAiZDJrIjogMywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEyNSIsICJhOWsiOiA5LCAiYTlvIjogZmFsc2UsICJhMTFrIjogNCwgImExMW8iOiBmYWxzZSwgImRhayI6IDQsICJkYW8iOiBmYWxzZSwgImQyayI6IDMsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMjYiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogMSwgImExMW8iOiB0cnVlLCAiZGFrIjogMSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTI3IiwgImE5ayI6IDAsICJhOW8iOiBmYWxzZSwgImExMWsiOiAxLCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDAsICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MTI4IiwgImE5ayI6IDAsICJhOW8iOiB0cnVlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDEsICJkYW8iOiB0cnVlLCAiZDJrIjogMCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEyOSIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAwLCAiYTExbyI6IGZhbHNlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiAwLCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjEzMCIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAzLCAiYTExbyI6IHRydWUsICJkYWsiOiAzLCAiZGFvIjogdHJ1ZSwgImQyayI6IDMsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMzEiLCAiYTlrIjogNywgImE5byI6IHRydWUsICJhMTFrIjogMywgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IHRydWUsICJkMmsiOiAwLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTMyIiwgImE5ayI6IDUsICJhOW8iOiBmYWxzZSwgImExMWsiOiA3LCAiYTExbyI6IGZhbHNlLCAiZGFrIjogNywgImRhbyI6IGZhbHNlLCAiZDJrIjogMiwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEzMyIsICJhOWsiOiA5LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA3LCAiYTExbyI6IHRydWUsICJkYWsiOiA3LCAiZGFvIjogdHJ1ZSwgImQyayI6IDcsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMzQiLCAiYTlrIjogNiwgImE5byI6IGZhbHNlLCAiYTExayI6IDcsICJhMTFvIjogdHJ1ZSwgImRhayI6IDYsICJkYW8iOiBmYWxzZSwgImQyayI6IDYsICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MTM1IiwgImE5ayI6IDksICJhOW8iOiB0cnVlLCAiYTExayI6IDUsICJhMTFvIjogdHJ1ZSwgImRhayI6IDUsICJkYW8iOiB0cnVlLCAiZDJrIjogMCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEzNiIsICJhOWsiOiAzLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA0LCAiYTExbyI6IHRydWUsICJkYWsiOiAzLCAiZGFvIjogdHJ1ZSwgImQyayI6IDQsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxMzciLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogOCwgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTM4IiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDgsICJhMTFvIjogdHJ1ZSwgImRhayI6IDgsICJkYW8iOiB0cnVlLCAiZDJrIjogOCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjEzOSIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA4LCAiYTExbyI6IGZhbHNlLCAiZGFrIjogOCwgImRhbyI6IGZhbHNlLCAiZDJrIjogNSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE0MCIsICJhOWsiOiAxLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAwLCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNDEiLCAiYTlrIjogMSwgImE5byI6IHRydWUsICJhMTFrIjogOCwgImExMW8iOiB0cnVlLCAiZGFrIjogOCwgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTQyIiwgImE5ayI6IDEsICJhOW8iOiB0cnVlLCAiYTExayI6IDgsICJhMTFvIjogZmFsc2UsICJkYWsiOiA4LCAiZGFvIjogZmFsc2UsICJkMmsiOiA4LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjE0MyIsICJhOWsiOiAxLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA4LCAiYTExbyI6IHRydWUsICJkYWsiOiA4LCAiZGFvIjogdHJ1ZSwgImQyayI6IDgsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNDQiLCAiYTlrIjogNCwgImE5byI6IHRydWUsICJhMTFrIjogOSwgImExMW8iOiB0cnVlLCAiZGFrIjogNCwgImRhbyI6IHRydWUsICJkMmsiOiA5LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTQ1IiwgImE5ayI6IDksICJhOW8iOiBmYWxzZSwgImExMWsiOiA5LCAiYTExbyI6IGZhbHNlLCAiZGFrIjogOSwgImRhbyI6IGZhbHNlLCAiZDJrIjogOSwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNDYiLCAiYTlrIjogNCwgImE5byI6IGZhbHNlLCAiYTExayI6IDQsICJhMTFvIjogZmFsc2UsICJkYWsiOiA0LCAiZGFvIjogZmFsc2UsICJkMmsiOiA0LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjE0NyIsICJhOWsiOiAzLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA0LCAiYTExbyI6IHRydWUsICJkYWsiOiA0LCAiZGFvIjogdHJ1ZSwgImQyayI6IDQsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNDgiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogNCwgImExMW8iOiBmYWxzZSwgImRhayI6IDQsICJkYW8iOiBmYWxzZSwgImQyayI6IDgsICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MTQ5IiwgImE5ayI6IDMsICJhOW8iOiB0cnVlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDMsICJkYW8iOiB0cnVlLCAiZDJrIjogOCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE1MCIsICJhOWsiOiAzLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA0LCAiYTExbyI6IHRydWUsICJkYWsiOiAzLCAiZGFvIjogdHJ1ZSwgImQyayI6IDQsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNTEiLCAiYTlrIjogOSwgImE5byI6IHRydWUsICJhMTFrIjogMCwgImExMW8iOiB0cnVlLCAiZGFrIjogOSwgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTUyIiwgImE5ayI6IDEsICJhOW8iOiB0cnVlLCAiYTExayI6IDAsICJhMTFvIjogZmFsc2UsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNTMiLCAiYTlrIjogOSwgImE5byI6IHRydWUsICJhMTFrIjogMiwgImExMW8iOiB0cnVlLCAiZGFrIjogMiwgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjE1NCIsICJhOWsiOiAzLCAiYTlvIjogZmFsc2UsICJhMTFrIjogMCwgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IGZhbHNlLCAiZDJrIjogMywgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNTUiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogMSwgImExMW8iOiB0cnVlLCAiZGFrIjogMSwgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTU2IiwgImE5ayI6IDAsICJhOW8iOiB0cnVlLCAiYTExayI6IDEsICJhMTFvIjogZmFsc2UsICJkYWsiOiAxLCAiZGFvIjogZmFsc2UsICJkMmsiOiAxLCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjE1NyIsICJhOWsiOiA5LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAxLCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNTgiLCAiYTlrIjogNywgImE5byI6IGZhbHNlLCAiYTExayI6IDAsICJhMTFvIjogdHJ1ZSwgImRhayI6IDcsICJkYW8iOiBmYWxzZSwgImQyayI6IDcsICJkMm8iOiBmYWxzZX0sIHsicCI6ICIyMDI2MTU5IiwgImE5ayI6IDQsICJhOW8iOiB0cnVlLCAiYTExayI6IDEsICJhMTFvIjogdHJ1ZSwgImRhayI6IDQsICJkYW8iOiB0cnVlLCAiZDJrIjogNCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE2MCIsICJhOWsiOiA2LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA4LCAiYTExbyI6IHRydWUsICJkYWsiOiA2LCAiZGFvIjogdHJ1ZSwgImQyayI6IDYsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNjEiLCAiYTlrIjogNSwgImE5byI6IGZhbHNlLCAiYTExayI6IDcsICJhMTFvIjogdHJ1ZSwgImRhayI6IDcsICJkYW8iOiB0cnVlLCAiZDJrIjogNSwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNjIiLCAiYTlrIjogNSwgImE5byI6IGZhbHNlLCAiYTExayI6IDksICJhMTFvIjogdHJ1ZSwgImRhayI6IDMsICJkYW8iOiB0cnVlLCAiZDJrIjogMywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE2MyIsICJhOWsiOiA0LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA0LCAiYTExbyI6IHRydWUsICJkYWsiOiA0LCAiZGFvIjogdHJ1ZSwgImQyayI6IDQsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNjQiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogNSwgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTY1IiwgImE5ayI6IDMsICJhOW8iOiB0cnVlLCAiYTExayI6IDUsICJhMTFvIjogdHJ1ZSwgImRhayI6IDUsICJkYW8iOiB0cnVlLCAiZDJrIjogMywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE2NiIsICJhOWsiOiAzLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA1LCAiYTExbyI6IHRydWUsICJkYWsiOiA1LCAiZGFvIjogdHJ1ZSwgImQyayI6IDMsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNjciLCAiYTlrIjogNCwgImE5byI6IHRydWUsICJhMTFrIjogMCwgImExMW8iOiB0cnVlLCAiZGFrIjogOCwgImRhbyI6IHRydWUsICJkMmsiOiA0LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTY4IiwgImE5ayI6IDQsICJhOW8iOiB0cnVlLCAiYTExayI6IDIsICJhMTFvIjogdHJ1ZSwgImRhayI6IDQsICJkYW8iOiB0cnVlLCAiZDJrIjogNCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE2OSIsICJhOWsiOiA0LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA5LCAiYTExbyI6IHRydWUsICJkYWsiOiA0LCAiZGFvIjogdHJ1ZSwgImQyayI6IDQsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNzAiLCAiYTlrIjogNCwgImE5byI6IHRydWUsICJhMTFrIjogNSwgImExMW8iOiBmYWxzZSwgImRhayI6IDMsICJkYW8iOiB0cnVlLCAiZDJrIjogMywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE3MSIsICJhOWsiOiA0LCAiYTlvIjogZmFsc2UsICJhMTFrIjogNSwgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IGZhbHNlLCAiZDJrIjogMywgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNzIiLCAiYTlrIjogNSwgImE5byI6IGZhbHNlLCAiYTExayI6IDUsICJhMTFvIjogZmFsc2UsICJkYWsiOiA1LCAiZGFvIjogZmFsc2UsICJkMmsiOiA1LCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjE3MyIsICJhOWsiOiA0LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA2LCAiYTExbyI6IGZhbHNlLCAiZGFrIjogMywgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTc0IiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDMsICJhMTFvIjogdHJ1ZSwgImRhayI6IDMsICJkYW8iOiB0cnVlLCAiZDJrIjogMywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE3NSIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA3LCAiYTExbyI6IHRydWUsICJkYWsiOiAzLCAiZGFvIjogdHJ1ZSwgImQyayI6IDMsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNzYiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogNywgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTc3IiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDcsICJhMTFvIjogdHJ1ZSwgImRhayI6IDUsICJkYW8iOiB0cnVlLCAiZDJrIjogNSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE3OCIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA3LCAiYTExbyI6IHRydWUsICJkYWsiOiAzLCAiZGFvIjogdHJ1ZSwgImQyayI6IDUsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxNzkiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogNSwgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTgwIiwgImE5ayI6IDUsICJhOW8iOiBmYWxzZSwgImExMWsiOiA1LCAiYTExbyI6IGZhbHNlLCAiZGFrIjogNSwgImRhbyI6IGZhbHNlLCAiZDJrIjogNSwgImQybyI6IGZhbHNlfSwgeyJwIjogIjIwMjYxODEiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogNSwgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTgyIiwgImE5ayI6IDMsICJhOW8iOiB0cnVlLCAiYTExayI6IDksICJhMTFvIjogdHJ1ZSwgImRhayI6IDMsICJkYW8iOiB0cnVlLCAiZDJrIjogMywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE4MyIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAzLCAiYTExbyI6IGZhbHNlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTg0IiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDgsICJhMTFvIjogdHJ1ZSwgImRhayI6IDgsICJkYW8iOiB0cnVlLCAiZDJrIjogOCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE4NSIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA4LCAiYTExbyI6IHRydWUsICJkYWsiOiA4LCAiZGFvIjogdHJ1ZSwgImQyayI6IDgsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxODYiLCAiYTlrIjogNSwgImE5byI6IGZhbHNlLCAiYTExayI6IDMsICJhMTFvIjogdHJ1ZSwgImRhayI6IDMsICJkYW8iOiB0cnVlLCAiZDJrIjogMywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE4NyIsICJhOWsiOiA1LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA5LCAiYTExbyI6IHRydWUsICJkYWsiOiA5LCAiZGFvIjogdHJ1ZSwgImQyayI6IDksICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxODgiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogOCwgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTg5IiwgImE5ayI6IDUsICJhOW8iOiBmYWxzZSwgImExMWsiOiAwLCAiYTExbyI6IHRydWUsICJkYWsiOiAwLCAiZGFvIjogdHJ1ZSwgImQyayI6IDIsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxOTAiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogNCwgImExMW8iOiB0cnVlLCAiZGFrIjogMywgImRhbyI6IHRydWUsICJkMmsiOiAzLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTkxIiwgImE5ayI6IDIsICJhOW8iOiB0cnVlLCAiYTExayI6IDQsICJhMTFvIjogdHJ1ZSwgImRhayI6IDQsICJkYW8iOiB0cnVlLCAiZDJrIjogNCwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE5MiIsICJhOWsiOiA4LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA0LCAiYTExbyI6IGZhbHNlLCAiZGFrIjogOCwgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTkzIiwgImE5ayI6IDgsICJhOW8iOiB0cnVlLCAiYTExayI6IDIsICJhMTFvIjogZmFsc2UsICJkYWsiOiA4LCAiZGFvIjogdHJ1ZSwgImQyayI6IDgsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxOTQiLCAiYTlrIjogNSwgImE5byI6IHRydWUsICJhMTFrIjogNCwgImExMW8iOiB0cnVlLCAiZGFrIjogNSwgImRhbyI6IHRydWUsICJkMmsiOiA1LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTk1IiwgImE5ayI6IDUsICJhOW8iOiBmYWxzZSwgImExMWsiOiA5LCAiYTExbyI6IHRydWUsICJkYWsiOiA1LCAiZGFvIjogZmFsc2UsICJkMmsiOiAyLCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjE5NiIsICJhOWsiOiA4LCAiYTlvIjogdHJ1ZSwgImExMWsiOiA0LCAiYTExbyI6IGZhbHNlLCAiZGFrIjogMiwgImRhbyI6IHRydWUsICJkMmsiOiAyLCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MTk3IiwgImE5ayI6IDUsICJhOW8iOiB0cnVlLCAiYTExayI6IDUsICJhMTFvIjogdHJ1ZSwgImRhayI6IDUsICJkYW8iOiB0cnVlLCAiZDJrIjogNSwgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjE5OCIsICJhOWsiOiAxLCAiYTlvIjogdHJ1ZSwgImExMWsiOiA0LCAiYTExbyI6IHRydWUsICJkYWsiOiA0LCAiZGFvIjogdHJ1ZSwgImQyayI6IDEsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYxOTkiLCAiYTlrIjogMywgImE5byI6IHRydWUsICJhMTFrIjogMSwgImExMW8iOiBmYWxzZSwgImRhayI6IDMsICJkYW8iOiB0cnVlLCAiZDJrIjogMywgImQybyI6IHRydWV9LCB7InAiOiAiMjAyNjIwMCIsICJhOWsiOiA4LCAiYTlvIjogdHJ1ZSwgImExMWsiOiAwLCAiYTExbyI6IHRydWUsICJkYWsiOiA4LCAiZGFvIjogdHJ1ZSwgImQyayI6IDgsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYyMDEiLCAiYTlrIjogMSwgImE5byI6IGZhbHNlLCAiYTExayI6IDEsICJhMTFvIjogZmFsc2UsICJkYWsiOiAxLCAiZGFvIjogZmFsc2UsICJkMmsiOiAxLCAiZDJvIjogZmFsc2V9LCB7InAiOiAiMjAyNjIwMiIsICJhOWsiOiAxLCAiYTlvIjogdHJ1ZSwgImExMWsiOiAyLCAiYTExbyI6IHRydWUsICJkYWsiOiAxLCAiZGFvIjogdHJ1ZSwgImQyayI6IDIsICJkMm8iOiB0cnVlfSwgeyJwIjogIjIwMjYyMDMiLCAiYTlrIjogOCwgImE5byI6IHRydWUsICJhMTFrIjogOCwgImExMW8iOiB0cnVlLCAiZGFrIjogOCwgImRhbyI6IHRydWUsICJkMmsiOiA4LCAiZDJvIjogdHJ1ZX0sIHsicCI6ICIyMDI2MjA0IiwgImE5ayI6IG51bGwsICJhOW8iOiBudWxsLCAiYTExayI6IG51bGwsICJhMTFvIjogbnVsbCwgImRhayI6IG51bGwsICJkYW8iOiBudWxsLCAiZDJrIjogbnVsbCwgImQybyI6IG51bGx9XSwgInNpeF9oaXN0b3J5IjogW3sicCI6ICIyMDI2MDAyIiwgImQiOiAiMjAyNi0wMS0wMiIsICJ3IjogIjUyMCIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMDMiLCAiZCI6ICIyMDI2LTAxLTAzIiwgInciOiAiNjAxIiwgImciOiAiRzAiLCAiYyI6IFsxLCAyLCAzLCA0LCA1LCA2XSwgIm0iOiAyLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjAwNCIsICJkIjogIjIwMjYtMDEtMDQiLCAidyI6ICIwMTkiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDMsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDA1IiwgImQiOiAiMjAyNi0wMS0wNSIsICJ3IjogIjQ3NiIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogNCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMDYiLCAiZCI6ICIyMDI2LTAxLTA2IiwgInciOiAiMjQ0IiwgImciOiAiRzAiLCAiYyI6IFsxLCAyLCAzLCA0LCA1LCA2XSwgIm0iOiA1LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjAwNyIsICJkIjogIjIwMjYtMDEtMDciLCAidyI6ICIzNTMiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDYsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDA4IiwgImQiOiAiMjAyNi0wMS0wOCIsICJ3IjogIjI1MiIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogNywgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMDkiLCAiZCI6ICIyMDI2LTAxLTA5IiwgInciOiAiMjY1IiwgImciOiAiRzAiLCAiYyI6IFsxLCAyLCAzLCA0LCA1LCA2XSwgIm0iOiA4LCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MDEwIiwgImQiOiAiMjAyNi0wMS0xMCIsICJ3IjogIjY2NyIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogOSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMTEiLCAiZCI6ICIyMDI2LTAxLTExIiwgInciOiAiNjQ3IiwgImciOiAiRzQiLCAiYyI6IFsxLCAyLCA0LCA1LCA3LCA4XSwgIm0iOiAxMCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMTIiLCAiZCI6ICIyMDI2LTAxLTEyIiwgInciOiAiMjQxIiwgImciOiAiRzQiLCAiYyI6IFsxLCAyLCA0LCA1LCA3LCA4XSwgIm0iOiAxMSwgImhpdCI6IHRydWV9LCB7InAiOiAiMjAyNjAxMyIsICJkIjogIjIwMjYtMDEtMTMiLCAidyI6ICI1MTMiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDEyLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjAxNCIsICJkIjogIjIwMjYtMDEtMTQiLCAidyI6ICIwNTAiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDEzLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjAxNSIsICJkIjogIjIwMjYtMDEtMTUiLCAidyI6ICI1MzIiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDE0LCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MDE2IiwgImQiOiAiMjAyNi0wMS0xNiIsICJ3IjogIjU4MiIsICJnIjogIkc2IiwgImMiOiBbMCwgMiwgNiwgNywgOCwgOV0sICJtIjogMTQsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDE3IiwgImQiOiAiMjAyNi0wMS0xNyIsICJ3IjogIjk0NSIsICJnIjogIkc2IiwgImMiOiBbMCwgMiwgNiwgNywgOCwgOV0sICJtIjogMTUsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDE4IiwgImQiOiAiMjAyNi0wMS0xOCIsICJ3IjogIjQ5NCIsICJnIjogIkc2IiwgImMiOiBbMCwgMiwgNiwgNywgOCwgOV0sICJtIjogMTYsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDE5IiwgImQiOiAiMjAyNi0wMS0xOSIsICJ3IjogIjIyMyIsICJnIjogIkc2IiwgImMiOiBbMCwgMiwgNiwgNywgOCwgOV0sICJtIjogMTcsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDIwIiwgImQiOiAiMjAyNi0wMS0yMCIsICJ3IjogIjY3NiIsICJnIjogIkc2IiwgImMiOiBbMCwgMiwgNiwgNywgOCwgOV0sICJtIjogMTgsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDIxIiwgImQiOiAiMjAyNi0wMS0yMSIsICJ3IjogIjU1OSIsICJnIjogIkc2IiwgImMiOiBbMCwgMiwgNiwgNywgOCwgOV0sICJtIjogMTksICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDIyIiwgImQiOiAiMjAyNi0wMS0yMiIsICJ3IjogIjY3OCIsICJnIjogIkc2IiwgImMiOiBbMCwgMiwgNiwgNywgOCwgOV0sICJtIjogMjAsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwMjMiLCAiZCI6ICIyMDI2LTAxLTIzIiwgInciOiAiNzg0IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiAxMCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMjQiLCAiZCI6ICIyMDI2LTAxLTI0IiwgInciOiAiOTExIiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiAxMSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMjUiLCAiZCI6ICIyMDI2LTAxLTI1IiwgInciOiAiMDI5IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiAxMiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMjYiLCAiZCI6ICIyMDI2LTAxLTI2IiwgInciOiAiMDk5IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiAxMywgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMjciLCAiZCI6ICIyMDI2LTAxLTI3IiwgInciOiAiMTI2IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiAxNCwgImhpdCI6IHRydWV9LCB7InAiOiAiMjAyNjAyOCIsICJkIjogIjIwMjYtMDEtMjgiLCAidyI6ICIyNzAiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDExLCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MDI5IiwgImQiOiAiMjAyNi0wMS0yOSIsICJ3IjogIjAwMyIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTEsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDMwIiwgImQiOiAiMjAyNi0wMS0zMCIsICJ3IjogIjEzNCIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTIsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDMxIiwgImQiOiAiMjAyNi0wMS0zMSIsICJ3IjogIjE0MiIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTMsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDMyIiwgImQiOiAiMjAyNi0wMi0wMSIsICJ3IjogIjQ1MiIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTQsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwMzMiLCAiZCI6ICIyMDI2LTAyLTAyIiwgInciOiAiMTE5IiwgImciOiAiRzEiLCAiYyI6IFswLCAyLCAzLCA1LCA3LCA4XSwgIm0iOiA0LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjAzNCIsICJkIjogIjIwMjYtMDItMDMiLCAidyI6ICIwNTIiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDUsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwMzUiLCAiZCI6ICIyMDI2LTAyLTA0IiwgInciOiAiMjEzIiwgImciOiAiRzYiLCAiYyI6IFswLCAyLCA2LCA3LCA4LCA5XSwgIm0iOiA2LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjAzNiIsICJkIjogIjIwMjYtMDItMDUiLCAidyI6ICI3NjIiLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDcsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwMzciLCAiZCI6ICIyMDI2LTAyLTA2IiwgInciOiAiNDIwIiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiA1LCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MDM4IiwgImQiOiAiMjAyNi0wMi0wNyIsICJ3IjogIjQ2NyIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogNSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwMzkiLCAiZCI6ICIyMDI2LTAyLTA4IiwgInciOiAiNDUwIiwgImciOiAiRzQiLCAiYyI6IFsxLCAyLCA0LCA1LCA3LCA4XSwgIm0iOiA2LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA0MCIsICJkIjogIjIwMjYtMDItMDkiLCAidyI6ICI0MjUiLCAiZyI6ICJHNCIsICJjIjogWzEsIDIsIDQsIDUsIDcsIDhdLCAibSI6IDcsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwNDEiLCAiZCI6ICIyMDI2LTAyLTEwIiwgInciOiAiOTAxIiwgImciOiAiRzEiLCAiYyI6IFswLCAyLCAzLCA1LCA3LCA4XSwgIm0iOiA2LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA0MiIsICJkIjogIjIwMjYtMDItMTEiLCAidyI6ICI4NTQiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDcsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDQzIiwgImQiOiAiMjAyNi0wMi0xMiIsICJ3IjogIjc2NSIsICJnIjogIkcxIiwgImMiOiBbMCwgMiwgMywgNSwgNywgOF0sICJtIjogOCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwNDQiLCAiZCI6ICIyMDI2LTAyLTEzIiwgInciOiAiNTg5IiwgImciOiAiRzEiLCAiYyI6IFswLCAyLCAzLCA1LCA3LCA4XSwgIm0iOiA5LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA0NSIsICJkIjogIjIwMjYtMDItMjQiLCAidyI6ICIxODEiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDEwLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA0NiIsICJkIjogIjIwMjYtMDItMjUiLCAidyI6ICIyOTEiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDExLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA0NyIsICJkIjogIjIwMjYtMDItMjYiLCAidyI6ICI5MzYiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDEyLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA0OCIsICJkIjogIjIwMjYtMDItMjciLCAidyI6ICI2MTIiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDEzLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA0OSIsICJkIjogIjIwMjYtMDItMjgiLCAidyI6ICIxMTAiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDE0LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA1MCIsICJkIjogIjIwMjYtMDMtMDEiLCAidyI6ICI2ODkiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDE1LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA1MSIsICJkIjogIjIwMjYtMDMtMDIiLCAidyI6ICIzMDIiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDE2LCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MDUyIiwgImQiOiAiMjAyNi0wMy0wMyIsICJ3IjogIjI3NyIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTEsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDUzIiwgImQiOiAiMjAyNi0wMy0wNCIsICJ3IjogIjc1NSIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTIsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDU0IiwgImQiOiAiMjAyNi0wMy0wNSIsICJ3IjogIjIxNyIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTMsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDU1IiwgImQiOiAiMjAyNi0wMy0wNiIsICJ3IjogIjEwNyIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTQsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDU2IiwgImQiOiAiMjAyNi0wMy0wNyIsICJ3IjogIjQ3NyIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTUsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDU3IiwgImQiOiAiMjAyNi0wMy0wOCIsICJ3IjogIjI2NCIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTYsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDU4IiwgImQiOiAiMjAyNi0wMy0wOSIsICJ3IjogIjU0MyIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTcsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwNTkiLCAiZCI6ICIyMDI2LTAzLTEwIiwgInciOiAiNzk0IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwNjAiLCAiZCI6ICIyMDI2LTAzLTExIiwgInciOiAiOTQzIiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwNjEiLCAiZCI6ICIyMDI2LTAzLTEyIiwgInciOiAiNDI5IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNiwgImhpdCI6IHRydWV9LCB7InAiOiAiMjAyNjA2MiIsICJkIjogIjIwMjYtMDMtMTMiLCAidyI6ICIyOTQiLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDExLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA2MyIsICJkIjogIjIwMjYtMDMtMTQiLCAidyI6ICI1MTciLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDEyLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA2NCIsICJkIjogIjIwMjYtMDMtMTUiLCAidyI6ICI2MDQiLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDEzLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA2NSIsICJkIjogIjIwMjYtMDMtMTYiLCAidyI6ICIwNTciLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDE0LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA2NiIsICJkIjogIjIwMjYtMDMtMTciLCAidyI6ICI5MzQiLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDE1LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA2NyIsICJkIjogIjIwMjYtMDMtMTgiLCAidyI6ICI2OTUiLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDE2LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA2OCIsICJkIjogIjIwMjYtMDMtMTkiLCAidyI6ICI3MDYiLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDE3LCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MDY5IiwgImQiOiAiMjAyNi0wMy0yMCIsICJ3IjogIjkwOCIsICJnIjogIkc3IiwgImMiOiBbMSwgMiwgNCwgNSwgNiwgOF0sICJtIjogMTEsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDcwIiwgImQiOiAiMjAyNi0wMy0yMSIsICJ3IjogIjQ4NCIsICJnIjogIkc3IiwgImMiOiBbMSwgMiwgNCwgNSwgNiwgOF0sICJtIjogMTIsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDcxIiwgImQiOiAiMjAyNi0wMy0yMiIsICJ3IjogIjI2MSIsICJnIjogIkc3IiwgImMiOiBbMSwgMiwgNCwgNSwgNiwgOF0sICJtIjogMTMsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwNzIiLCAiZCI6ICIyMDI2LTAzLTIzIiwgInciOiAiMjQ1IiwgImciOiAiRzkiLCAiYyI6IFsxLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiA5LCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MDczIiwgImQiOiAiMjAyNi0wMy0yNCIsICJ3IjogIjUwNCIsICJnIjogIkcxIiwgImMiOiBbMCwgMiwgMywgNSwgNywgOF0sICJtIjogNywgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwNzQiLCAiZCI6ICIyMDI2LTAzLTI1IiwgInciOiAiNDg3IiwgImciOiAiRzEiLCAiYyI6IFswLCAyLCAzLCA1LCA3LCA4XSwgIm0iOiA4LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA3NSIsICJkIjogIjIwMjYtMDMtMjYiLCAidyI6ICI4MTYiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDksICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDc2IiwgImQiOiAiMjAyNi0wMy0yNyIsICJ3IjogIjg2MyIsICJnIjogIkcxIiwgImMiOiBbMCwgMiwgMywgNSwgNywgOF0sICJtIjogMTAsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDc3IiwgImQiOiAiMjAyNi0wMy0yOCIsICJ3IjogIjExMiIsICJnIjogIkcxIiwgImMiOiBbMCwgMiwgMywgNSwgNywgOF0sICJtIjogMTEsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDc4IiwgImQiOiAiMjAyNi0wMy0yOSIsICJ3IjogIjA0OSIsICJnIjogIkcxIiwgImMiOiBbMCwgMiwgMywgNSwgNywgOF0sICJtIjogMTIsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDc5IiwgImQiOiAiMjAyNi0wMy0zMCIsICJ3IjogIjIzMyIsICJnIjogIkcxIiwgImMiOiBbMCwgMiwgMywgNSwgNywgOF0sICJtIjogMTMsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDgwIiwgImQiOiAiMjAyNi0wMy0zMSIsICJ3IjogIjgwMiIsICJnIjogIkcxIiwgImMiOiBbMCwgMiwgMywgNSwgNywgOF0sICJtIjogMTQsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwODEiLCAiZCI6ICIyMDI2LTA0LTAxIiwgInciOiAiODI3IiwgImciOiAiRzAiLCAiYyI6IFsxLCAyLCAzLCA0LCA1LCA2XSwgIm0iOiA4LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA4MiIsICJkIjogIjIwMjYtMDQtMDIiLCAidyI6ICI5NDIiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDksICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDgzIiwgImQiOiAiMjAyNi0wNC0wMyIsICJ3IjogIjUwNiIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTAsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDg0IiwgImQiOiAiMjAyNi0wNC0wNCIsICJ3IjogIjQ1NiIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTEsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwODUiLCAiZCI6ICIyMDI2LTA0LTA1IiwgInciOiAiMTE4IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiA0LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA4NiIsICJkIjogIjIwMjYtMDQtMDYiLCAidyI6ICIzODIiLCAiZyI6ICJHMiIsICJjIjogWzAsIDEsIDIsIDQsIDYsIDhdLCAibSI6IDUsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDg3IiwgImQiOiAiMjAyNi0wNC0wNyIsICJ3IjogIjkxMSIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogNiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwODgiLCAiZCI6ICIyMDI2LTA0LTA4IiwgInciOiAiNjA4IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiA3LCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MDg5IiwgImQiOiAiMjAyNi0wNC0wOSIsICJ3IjogIjkyMiIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogNywgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwOTAiLCAiZCI6ICIyMDI2LTA0LTEwIiwgInciOiAiODE2IiwgImciOiAiRzQiLCAiYyI6IFsxLCAyLCA0LCA1LCA3LCA4XSwgIm0iOiA4LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjA5MSIsICJkIjogIjIwMjYtMDQtMTEiLCAidyI6ICI1MzciLCAiZyI6ICJHNCIsICJjIjogWzEsIDIsIDQsIDUsIDcsIDhdLCAibSI6IDksICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDkyIiwgImQiOiAiMjAyNi0wNC0xMiIsICJ3IjogIjg3MCIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTAsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MDkzIiwgImQiOiAiMjAyNi0wNC0xMyIsICJ3IjogIjUxOCIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTEsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYwOTQiLCAiZCI6ICIyMDI2LTA0LTE0IiwgInciOiAiNDE4IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxMSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwOTUiLCAiZCI6ICIyMDI2LTA0LTE1IiwgInciOiAiMDIyIiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxMiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwOTYiLCAiZCI6ICIyMDI2LTA0LTE2IiwgInciOiAiNjg5IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxMywgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwOTciLCAiZCI6ICIyMDI2LTA0LTE3IiwgInciOiAiODE4IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwOTgiLCAiZCI6ICIyMDI2LTA0LTE4IiwgInciOiAiNTEzIiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYwOTkiLCAiZCI6ICIyMDI2LTA0LTE5IiwgInciOiAiODc3IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMDAiLCAiZCI6ICIyMDI2LTA0LTIwIiwgInciOiAiNDE0IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNywgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMDEiLCAiZCI6ICIyMDI2LTA0LTIxIiwgInciOiAiNTg0IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxOCwgImhpdCI6IHRydWV9LCB7InAiOiAiMjAyNjEwMiIsICJkIjogIjIwMjYtMDQtMjIiLCAidyI6ICI0MjAiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDEwLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjEwMyIsICJkIjogIjIwMjYtMDQtMjMiLCAidyI6ICI2NjEiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDExLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjEwNCIsICJkIjogIjIwMjYtMDQtMjQiLCAidyI6ICI0ODIiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDEyLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjEwNSIsICJkIjogIjIwMjYtMDQtMjUiLCAidyI6ICI2MzEiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDEzLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjEwNiIsICJkIjogIjIwMjYtMDQtMjYiLCAidyI6ICI5MjgiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDE0LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjEwNyIsICJkIjogIjIwMjYtMDQtMjciLCAidyI6ICIyNzgiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDE1LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjEwOCIsICJkIjogIjIwMjYtMDQtMjgiLCAidyI6ICI2NzEiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDE2LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjEwOSIsICJkIjogIjIwMjYtMDQtMjkiLCAidyI6ICIxOTUiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDE3LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjExMCIsICJkIjogIjIwMjYtMDQtMzAiLCAidyI6ICIzNzkiLCAiZyI6ICJHNSIsICJjIjogWzIsIDMsIDQsIDUsIDcsIDldLCAibSI6IDE4LCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MTExIiwgImQiOiAiMjAyNi0wNS0wMSIsICJ3IjogIjg2MyIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogNiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMTIiLCAiZCI6ICIyMDI2LTA1LTAyIiwgInciOiAiMDY1IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiA3LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjExMyIsICJkIjogIjIwMjYtMDUtMDMiLCAidyI6ICIwNDAiLCAiZyI6ICJHMiIsICJjIjogWzAsIDEsIDIsIDQsIDYsIDhdLCAibSI6IDgsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTE0IiwgImQiOiAiMjAyNi0wNS0wNCIsICJ3IjogIjg2NCIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogOSwgImhpdCI6IHRydWV9LCB7InAiOiAiMjAyNjExNSIsICJkIjogIjIwMjYtMDUtMDUiLCAidyI6ICI1ODEiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDksICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTE2IiwgImQiOiAiMjAyNi0wNS0wNiIsICJ3IjogIjAyMCIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTAsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTE3IiwgImQiOiAiMjAyNi0wNS0wNyIsICJ3IjogIjQxMSIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTEsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTE4IiwgImQiOiAiMjAyNi0wNS0wOCIsICJ3IjogIjEzMiIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTIsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYxMTkiLCAiZCI6ICIyMDI2LTA1LTA5IiwgInciOiAiMTEyIiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxMiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMjAiLCAiZCI6ICIyMDI2LTA1LTEwIiwgInciOiAiNzM0IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxMywgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMjEiLCAiZCI6ICIyMDI2LTA1LTExIiwgInciOiAiMzkzIiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMjIiLCAiZCI6ICIyMDI2LTA1LTEyIiwgInciOiAiMzQ2IiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMjMiLCAiZCI6ICIyMDI2LTA1LTEzIiwgInciOiAiMjAwIiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMjQiLCAiZCI6ICIyMDI2LTA1LTE0IiwgInciOiAiMjgwIiwgImciOiAiRzMiLCAiYyI6IFswLCAyLCA0LCA1LCA4LCA5XSwgIm0iOiAxNywgImhpdCI6IHRydWV9LCB7InAiOiAiMjAyNjEyNSIsICJkIjogIjIwMjYtMDUtMTUiLCAidyI6ICI5NTQiLCAiZyI6ICJHOCIsICJjIjogWzIsIDQsIDUsIDYsIDgsIDldLCAibSI6IDEwLCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MTI2IiwgImQiOiAiMjAyNi0wNS0xNiIsICJ3IjogIjg0NiIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTAsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTI3IiwgImQiOiAiMjAyNi0wNS0xNyIsICJ3IjogIjcwMCIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTEsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTI4IiwgImQiOiAiMjAyNi0wNS0xOCIsICJ3IjogIjc3NiIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTIsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTI5IiwgImQiOiAiMjAyNi0wNS0xOSIsICJ3IjogIjAyMyIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTMsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTMwIiwgImQiOiAiMjAyNi0wNS0yMCIsICJ3IjogIjI2NyIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTQsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTMxIiwgImQiOiAiMjAyNi0wNS0yMSIsICJ3IjogIjU5OCIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTUsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTMyIiwgImQiOiAiMjAyNi0wNS0yMiIsICJ3IjogIjc1NiIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTYsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTMzIiwgImQiOiAiMjAyNi0wNS0yMyIsICJ3IjogIjA4MCIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTcsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTM0IiwgImQiOiAiMjAyNi0wNS0yNCIsICJ3IjogIjY1NCIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTgsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTM1IiwgImQiOiAiMjAyNi0wNS0yNSIsICJ3IjogIjQ4NyIsICJnIjogIkc0IiwgImMiOiBbMSwgMiwgNCwgNSwgNywgOF0sICJtIjogMTksICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYxMzYiLCAiZCI6ICIyMDI2LTA1LTI2IiwgInciOiAiODg5IiwgImciOiAiRzUiLCAiYyI6IFsyLCAzLCA0LCA1LCA3LCA5XSwgIm0iOiAxMCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMzciLCAiZCI6ICIyMDI2LTA1LTI3IiwgInciOiAiMTY1IiwgImciOiAiRzUiLCAiYyI6IFsyLCAzLCA0LCA1LCA3LCA5XSwgIm0iOiAxMSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMzgiLCAiZCI6ICIyMDI2LTA1LTI4IiwgInciOiAiNzkwIiwgImciOiAiRzUiLCAiYyI6IFsyLCAzLCA0LCA1LCA3LCA5XSwgIm0iOiAxMiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxMzkiLCAiZCI6ICIyMDI2LTA1LTI5IiwgInciOiAiMjg2IiwgImciOiAiRzUiLCAiYyI6IFsyLCAzLCA0LCA1LCA3LCA5XSwgIm0iOiAxMywgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNDAiLCAiZCI6ICIyMDI2LTA1LTMwIiwgInciOiAiMjg1IiwgImciOiAiRzUiLCAiYyI6IFsyLCAzLCA0LCA1LCA3LCA5XSwgIm0iOiAxNCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNDEiLCAiZCI6ICIyMDI2LTA1LTMxIiwgInciOiAiMzk3IiwgImciOiAiRzUiLCAiYyI6IFsyLCAzLCA0LCA1LCA3LCA5XSwgIm0iOiAxNSwgImhpdCI6IHRydWV9LCB7InAiOiAiMjAyNjE0MiIsICJkIjogIjIwMjYtMDYtMDEiLCAidyI6ICI4OTQiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDQsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTQzIiwgImQiOiAiMjAyNi0wNi0wMiIsICJ3IjogIjM3NiIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogNSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNDQiLCAiZCI6ICIyMDI2LTA2LTAzIiwgInciOiAiNzI2IiwgImciOiAiRzAiLCAiYyI6IFsxLCAyLCAzLCA0LCA1LCA2XSwgIm0iOiA2LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE0NSIsICJkIjogIjIwMjYtMDYtMDQiLCAidyI6ICIyNzkiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDcsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTQ2IiwgImQiOiAiMjAyNi0wNi0wNSIsICJ3IjogIjQ2NCIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogOCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNDciLCAiZCI6ICIyMDI2LTA2LTA2IiwgInciOiAiNzEyIiwgImciOiAiRzAiLCAiYyI6IFsxLCAyLCAzLCA0LCA1LCA2XSwgIm0iOiA5LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE0OCIsICJkIjogIjIwMjYtMDYtMDciLCAidyI6ICI0MDgiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDEwLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE0OSIsICJkIjogIjIwMjYtMDYtMDgiLCAidyI6ICI2OTYiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDExLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE1MCIsICJkIjogIjIwMjYtMDYtMDkiLCAidyI6ICI3MjAiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDEyLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE1MSIsICJkIjogIjIwMjYtMDYtMTAiLCAidyI6ICI2MzEiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDEzLCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MTUyIiwgImQiOiAiMjAyNi0wNi0xMSIsICJ3IjogIjIyMCIsICJnIjogIkc3IiwgImMiOiBbMSwgMiwgNCwgNSwgNiwgOF0sICJtIjogMTEsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTUzIiwgImQiOiAiMjAyNi0wNi0xMiIsICJ3IjogIjg4NyIsICJnIjogIkc3IiwgImMiOiBbMSwgMiwgNCwgNSwgNiwgOF0sICJtIjogMTIsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTU0IiwgImQiOiAiMjAyNi0wNi0xMyIsICJ3IjogIjM3NyIsICJnIjogIkc3IiwgImMiOiBbMSwgMiwgNCwgNSwgNiwgOF0sICJtIjogMTMsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTU1IiwgImQiOiAiMjAyNi0wNi0xNCIsICJ3IjogIjQwOSIsICJnIjogIkc3IiwgImMiOiBbMSwgMiwgNCwgNSwgNiwgOF0sICJtIjogMTQsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTU2IiwgImQiOiAiMjAyNi0wNi0xNSIsICJ3IjogIjE2MiIsICJnIjogIkc3IiwgImMiOiBbMSwgMiwgNCwgNSwgNiwgOF0sICJtIjogMTUsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYxNTciLCAiZCI6ICIyMDI2LTA2LTE2IiwgInciOiAiMzI3IiwgImciOiAiRzgiLCAiYyI6IFsyLCA0LCA1LCA2LCA4LCA5XSwgIm0iOiAxNCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNTgiLCAiZCI6ICIyMDI2LTA2LTE3IiwgInciOiAiMTc4IiwgImciOiAiRzgiLCAiYyI6IFsyLCA0LCA1LCA2LCA4LCA5XSwgIm0iOiAxNSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNTkiLCAiZCI6ICIyMDI2LTA2LTE4IiwgInciOiAiOTk1IiwgImciOiAiRzgiLCAiYyI6IFsyLCA0LCA1LCA2LCA4LCA5XSwgIm0iOiAxNiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNjAiLCAiZCI6ICIyMDI2LTA2LTE5IiwgInciOiAiMzMyIiwgImciOiAiRzgiLCAiYyI6IFsyLCA0LCA1LCA2LCA4LCA5XSwgIm0iOiAxNywgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNjEiLCAiZCI6ICIyMDI2LTA2LTIwIiwgInciOiAiNTI5IiwgImciOiAiRzgiLCAiYyI6IFsyLCA0LCA1LCA2LCA4LCA5XSwgIm0iOiAxOCwgImhpdCI6IHRydWV9LCB7InAiOiAiMjAyNjE2MiIsICJkIjogIjIwMjYtMDYtMjEiLCAidyI6ICI1ODUiLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDExLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE2MyIsICJkIjogIjIwMjYtMDYtMjIiLCAidyI6ICI1MzciLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDEyLCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE2NCIsICJkIjogIjIwMjYtMDYtMjMiLCAidyI6ICI2OTAiLCAiZyI6ICJHNiIsICJjIjogWzAsIDIsIDYsIDcsIDgsIDldLCAibSI6IDEzLCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MTY1IiwgImQiOiAiMjAyNi0wNi0yNCIsICJ3IjogIjQyNCIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogOCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxNjYiLCAiZCI6ICIyMDI2LTA2LTI1IiwgInciOiAiOTAwIiwgImciOiAiRzAiLCAiYyI6IFsxLCAyLCAzLCA0LCA1LCA2XSwgIm0iOiA5LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE2NyIsICJkIjogIjIwMjYtMDYtMjYiLCAidyI6ICI2MzEiLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDEwLCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MTY4IiwgImQiOiAiMjAyNi0wNi0yNyIsICJ3IjogIjEzMCIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogMTEsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTY5IiwgImQiOiAiMjAyNi0wNi0yOCIsICJ3IjogIjgzMiIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogMTIsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTcwIiwgImQiOiAiMjAyNi0wNi0yOSIsICJ3IjogIjgwNSIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogMTMsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTcxIiwgImQiOiAiMjAyNi0wNi0zMCIsICJ3IjogIjEzNCIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogMTQsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTcyIiwgImQiOiAiMjAyNi0wNy0wMSIsICJ3IjogIjQ0NSIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogMTUsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTczIiwgImQiOiAiMjAyNi0wNy0wMiIsICJ3IjogIjY3NyIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogMTYsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTc0IiwgImQiOiAiMjAyNi0wNy0wMyIsICJ3IjogIjYxOCIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogMTcsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYxNzUiLCAiZCI6ICIyMDI2LTA3LTA0IiwgInciOiAiNDIxIiwgImciOiAiRzQiLCAiYyI6IFsxLCAyLCA0LCA1LCA3LCA4XSwgIm0iOiAxNiwgImhpdCI6IHRydWV9LCB7InAiOiAiMjAyNjE3NiIsICJkIjogIjIwMjYtMDctMDUiLCAidyI6ICIyNjkiLCAiZyI6ICJHOCIsICJjIjogWzIsIDQsIDUsIDYsIDgsIDldLCAibSI6IDE0LCAiaGl0IjogdHJ1ZX0sIHsicCI6ICIyMDI2MTc3IiwgImQiOiAiMjAyNi0wNy0wNiIsICJ3IjogIjgwOCIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTMsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTc4IiwgImQiOiAiMjAyNi0wNy0wNyIsICJ3IjogIjI2NiIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTQsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTc5IiwgImQiOiAiMjAyNi0wNy0wOCIsICJ3IjogIjk5MyIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTUsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTgwIiwgImQiOiAiMjAyNi0wNy0wOSIsICJ3IjogIjUyMCIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTYsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTgxIiwgImQiOiAiMjAyNi0wNy0xMCIsICJ3IjogIjgxOCIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTcsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTgyIiwgImQiOiAiMjAyNi0wNy0xMSIsICJ3IjogIjY2MiIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTgsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTgzIiwgImQiOiAiMjAyNi0wNy0xMiIsICJ3IjogIjkyMyIsICJnIjogIkc1IiwgImMiOiBbMiwgMywgNCwgNSwgNywgOV0sICJtIjogMTksICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYxODQiLCAiZCI6ICIyMDI2LTA3LTEzIiwgInciOiAiOTAyIiwgImciOiAiRzAiLCAiYyI6IFsxLCAyLCAzLCA0LCA1LCA2XSwgIm0iOiA4LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE4NSIsICJkIjogIjIwMjYtMDctMTQiLCAidyI6ICIzOTciLCAiZyI6ICJHMCIsICJjIjogWzEsIDIsIDMsIDQsIDUsIDZdLCAibSI6IDksICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTg2IiwgImQiOiAiMjAyNi0wNy0xNSIsICJ3IjogIjA0NSIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTAsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTg3IiwgImQiOiAiMjAyNi0wNy0xNiIsICJ3IjogIjAyMyIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTEsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTg4IiwgImQiOiAiMjAyNi0wNy0xNyIsICJ3IjogIjk2OSIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTIsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTg5IiwgImQiOiAiMjAyNi0wNy0xOCIsICJ3IjogIjU1OCIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTMsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTkwIiwgImQiOiAiMjAyNi0wNy0xOSIsICJ3IjogIjAyNiIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTQsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTkxIiwgImQiOiAiMjAyNi0wNy0yMCIsICJ3IjogIjkwNiIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTUsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTkyIiwgImQiOiAiMjAyNi0wNy0yMSIsICJ3IjogIjQyNSIsICJnIjogIkcwIiwgImMiOiBbMSwgMiwgMywgNCwgNSwgNl0sICJtIjogMTYsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYxOTMiLCAiZCI6ICIyMDI2LTA3LTIyIiwgInciOiAiMjU0IiwgImciOiAiRzEiLCAiYyI6IFswLCAyLCAzLCA1LCA3LCA4XSwgIm0iOiA1LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE5NCIsICJkIjogIjIwMjYtMDctMjMiLCAidyI6ICIyODMiLCAiZyI6ICJHMSIsICJjIjogWzAsIDIsIDMsIDUsIDcsIDhdLCAibSI6IDYsICJoaXQiOiB0cnVlfSwgeyJwIjogIjIwMjYxOTUiLCAiZCI6ICIyMDI2LTA3LTI0IiwgInciOiAiMjc1IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiA0LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE5NiIsICJkIjogIjIwMjYtMDctMjUiLCAidyI6ICI0MTkiLCAiZyI6ICJHMiIsICJjIjogWzAsIDEsIDIsIDQsIDYsIDhdLCAibSI6IDUsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MTk3IiwgImQiOiAiMjAyNi0wNy0yNiIsICJ3IjogIjIzMiIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogNiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYxOTgiLCAiZCI6ICIyMDI2LTA3LTI3IiwgInciOiAiNjg1IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiA3LCAiaGl0IjogZmFsc2V9LCB7InAiOiAiMjAyNjE5OSIsICJkIjogIjIwMjYtMDctMjgiLCAidyI6ICI1OTEiLCAiZyI6ICJHMiIsICJjIjogWzAsIDEsIDIsIDQsIDYsIDhdLCAibSI6IDgsICJoaXQiOiBmYWxzZX0sIHsicCI6ICIyMDI2MjAwIiwgImQiOiAiMjAyNi0wNy0yOSIsICJ3IjogIjkxMiIsICJnIjogIkcyIiwgImMiOiBbMCwgMSwgMiwgNCwgNiwgOF0sICJtIjogOSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYyMDEiLCAiZCI6ICIyMDI2LTA3LTMwIiwgInciOiAiMzIxIiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiAxMCwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYyMDIiLCAiZCI6ICIyMDI2LTA3LTMxIiwgInciOiAiOTg4IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiAxMSwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYyMDMiLCAiZCI6ICIyMDI2LTA4LTAxIiwgInciOiAiNDM1IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiAxMiwgImhpdCI6IGZhbHNlfSwgeyJwIjogIjIwMjYyMDQiLCAiZCI6ICIyMDI2LTA4LTAyIiwgInciOiAiOTc4IiwgImciOiAiRzIiLCAiYyI6IFswLCAxLCAyLCA0LCA2LCA4XSwgIm0iOiAxMywgImhpdCI6IGZhbHNlfV19';
+
+// 当前预测期号
+const NEXT_PERIOD = '205';
+
+// 图表数据（Python端预计算）
+window.__CHART_DATA__ = {"chart1": {"periods": ["175", "176", "177", "178", "179", "180", "181", "182", "183", "184", "185", "186", "187", "188", "189", "190", "191", "192", "193", "194", "195", "196", "197", "198", "199", "200", "201", "202", "203", "204"], "draws": ["421", "269", "808", "266", "993", "520", "818", "662", "923", "902", "397", "045", "023", "969", "558", "026", "906", "425", "254", "283", "275", "419", "232", "685", "591", "912", "321", "988", "435", "978"], "a8": [{"kill": 1, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 1, "ok": true}, {"kill": 1, "ok": true}, {"kill": 0, "ok": false}, {"kill": 7, "ok": true}, {"kill": 0, "ok": true}, {"kill": 1, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 0, "ok": false}, {"kill": 7, "ok": true}, {"kill": 5, "ok": true}, {"kill": 0, "ok": true}, {"kill": 0, "ok": false}, {"kill": 1, "ok": true}, {"kill": 1, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 3, "ok": true}, {"kill": 0, "ok": true}, {"kill": 5, "ok": true}, {"kill": 9, "ok": true}, {"kill": 1, "ok": false}, {"kill": 0, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": null, "ok": null}], "a9": [{"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 3, "ok": true}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 1, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "a11": [{"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 9, "ok": true}, {"kill": 3, "ok": false}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 8, "ok": true}, {"kill": 0, "ok": true}, {"kill": 4, "ok": true}, {"kill": 4, "ok": true}, {"kill": 4, "ok": false}, {"kill": 2, "ok": false}, {"kill": 4, "ok": true}, {"kill": 9, "ok": true}, {"kill": 4, "ok": false}, {"kill": 5, "ok": true}, {"kill": 4, "ok": true}, {"kill": 1, "ok": false}, {"kill": 0, "ok": true}, {"kill": 1, "ok": false}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "d1": [{"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 5, "ok": true}, {"kill": 0, "ok": true}, {"kill": 3, "ok": true}, {"kill": 4, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 2, "ok": true}, {"kill": 5, "ok": true}, {"kill": 4, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 1, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "d2": [{"kill": 3, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 5, "ok": true}, {"kill": 2, "ok": true}, {"kill": 3, "ok": true}, {"kill": 4, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 2, "ok": false}, {"kill": 2, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "all_right": [false, true, true, true, true, false, true, true, false, true, true, false, true, true, false, false, true, false, false, true, false, false, true, true, false, true, false, true, true, false], "consensus": [2, 3, 3, 2, 4, 4, 4, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 2, 2, 5, 2, 3, 3, 4, 2, 4, 0]}, "chart2": {"current_streaks": {"a8": 0, "a9": 0, "a11": 0, "d1": 0, "d2": 0}, "max_streaks": {"a8": 13, "a9": 17, "a11": 17, "d1": 17, "d2": 17}, "accuracy_30d": {"a8": 82.8, "a9": 82.8, "a11": 75.9, "d1": 89.7, "d2": 89.7}}};
+
+// ==================== 会员系统 ====================
+const LS_KEY = 'fc3d_user';
+const AUTH_TOKEN_KEY = 'fc3d_auth_token';
+let currentUser = null;
+let isRegisterMode = false;
+let VIP_DATA = null;  // 服务端VIP数据缓存
+
+function loadCurrentUser() {
+    try {
+        const u = JSON.parse(localStorage.getItem(LS_KEY));
+        if (u && u.phone) { currentUser = u; return; }
+    } catch {}
+    currentUser = null;
+}
+
+function saveCurrentUser() {
+    if (currentUser) localStorage.setItem(LS_KEY, JSON.stringify(currentUser));
+}
+function saveUserPhone() {
+    if (currentUser && currentUser.phone) localStorage.setItem(LS_KEY + '_phone', currentUser.phone);
+}
+
+// ==================== Token 管理 ====================
+function saveAuthToken(token) {
+    if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
+}
+function getAuthToken() {
+    return localStorage.getItem(AUTH_TOKEN_KEY) || null;
+}
+function clearAuthToken() {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+function getAuthHeaders() {
+    const token = getAuthToken();
+    const headers = {'Content-Type': 'application/json'};
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    return headers;
+}
+
+function isVip(user) {
+    if (!user) return false;
+    const exp = user.vip_expiry || user.expiry_date;
+    if (!exp) return false;
+    try { return new Date(exp) > new Date(); } catch { return false; }
+}
+
+function getVipDaysLeft(user) {
+    if (!user) return 0;
+    const exp = user.vip_expiry || user.expiry_date;
+    if (!exp) return 0;
+    try {
+        const diff = new Date(exp) - new Date();
+        return diff > 0 ? Math.ceil(diff / 86400000) : 0;
+    } catch { return 0; }
+}
+
+// ==================== Server API ====================
+async function apiRegister(phone, pwd, nick) {
+    const resp = await fetch('/api/register', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({phone, password: pwd, nickname: nick})
+    });
+    return await resp.json();
+}
+
+async function apiLogin(phone, pwd) {
+    const resp = await fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({phone, password: pwd})
+    });
+    return await resp.json();
+}
+
+async function logout() {
+    try {
+        await fetch('/api/logout', { method: 'POST', headers: getAuthHeaders(), credentials: 'same-origin' });
+    } catch(e) {}
+    currentUser = null;
+    VIP_DATA = null;
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_KEY + '_phone');
+    clearAuthToken();
+    refreshUI();
+}
+
+
+// ==================== 实名认证 ====================
+function validateIdCard(idCard) {
+    if (!idCard || idCard.length !== 18) return { ok: false, msg: '身份证号必须为18位' };
+    var reg = /^\d{17}[\dXx]$/;
+    if (!reg.test(idCard)) return { ok: false, msg: '身份证号格式不正确' };
+    var weights = [7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2];
+    var checks = '10X98765432';
+    var sum = 0;
+    for (var i = 0; i < 17; i++) sum += parseInt(idCard[i]) * weights[i];
+    if (checks[sum % 11] !== idCard[17].toUpperCase()) return { ok: false, msg: '身份证号校验位错误' };
+    var year = parseInt(idCard.substring(6, 10));
+    var month = parseInt(idCard.substring(10, 12));
+    var day = parseInt(idCard.substring(12, 14));
+    var birth = new Date(year, month - 1, day);
+    if (birth.getFullYear() !== year || birth.getMonth() !== month - 1 || birth.getDate() !== day)
+        return { ok: false, msg: '身份证号中的出生日期无效' };
+    var today = new Date();
+    var age = today.getFullYear() - year;
+    var m = today.getMonth() - (month - 1);
+    if (m < 0 || (m === 0 && today.getDate() < day)) age--;
+    if (age < 18) return { ok: false, msg: '必须年满18周岁才能使用本服务' };
+    return { ok: true, age: age };
+}
+function showVerifyModal() {
+    document.getElementById('verifyModal').style.display = 'flex';
+    document.getElementById('verifyMsg').textContent = '';
+    document.getElementById('verifyName').value = '';
+    document.getElementById('verifyIdCard').value = '';
+}
+function closeVerifyModal() { document.getElementById('verifyModal').style.display = 'none'; }
+async function submitVerify() {
+    var name = document.getElementById('verifyName').value.trim();
+    var idCard = document.getElementById('verifyIdCard').value.trim();
+    var msgEl = document.getElementById('verifyMsg');
+    // 先本地校验身份证格式
+    var localResult = validateIdCard(idCard);
+    if (!localResult.ok) { msgEl.style.color = 'var(--red)'; msgEl.textContent = localResult.msg; return; }
+    if (!name || name.length < 2) { msgEl.style.color = 'var(--red)'; msgEl.textContent = '请输入真实姓名（至少2个字）'; return; }
+    msgEl.style.color = 'var(--t2)'; msgEl.textContent = '提交中...';
+    try {
+        const resp = await fetch('/api/verify', {
+            method: 'POST', headers: getAuthHeaders(), credentials: 'same-origin',
+            body: JSON.stringify({name: name, id_card: idCard})
+        });
+        const res = await resp.json();
+        if (res.ok) {
+            currentUser = res.user; saveCurrentUser(); saveUserPhone();
+            msgEl.style.color = '#22c55e'; msgEl.textContent = res.msg;
+            setTimeout(function() { closeVerifyModal(); refreshUI(); }, 1500);
+        } else {
+            msgEl.style.color = 'var(--red)'; msgEl.textContent = res.error || '认证失败';
+        }
+    } catch(e) { msgEl.style.color = 'var(--red)'; msgEl.textContent = '网络错误，请重试'; }
+}
+
+// ==================== VIP数据解码 ====================
+function decodeVipData() {
+    try {
+        const json = atob(VIP_B64);
+        return JSON.parse(json);
+    } catch { return null; }
+}
+
+// ==================== UI ====================
+async function refreshUI() {
+    if (!currentUser) loadCurrentUser();
+    // 如果已登录，先从服务端同步用户数据（await确保完成后再渲染）
+    if (currentUser) {
+        await syncUserFromServer();
+    }
+    // 同步完成后再渲染，确保使用最新服务端数据
+    renderUserArea();
+    renderVipContent();
+    // 如果VIP，加载服务端VIP数据
+    if (currentUser && (currentUser.is_vip || isVip(currentUser))) {
+        loadVipDataFromServer();
+    }
+}
+
+async function syncUserFromServer() {
+    try {
+        const resp = await fetch('/api/me', { headers: getAuthHeaders(), credentials: 'same-origin' });
+        const res = await resp.json();
+        if (res.ok && res.logged_in) {
+            currentUser = res;
+            delete currentUser.ok; delete currentUser.logged_in;
+            saveCurrentUser(); saveUserPhone();
+            // 不在此处渲染，由refreshUI统一渲染，避免重复
+        } else if (!res.logged_in) {
+            // 服务端未认证，但localStorage有数据 → 保留本地数据（离线模式）
+            // 仅在确实没有token时才清空（说明从未登录过）
+            if (!getAuthToken()) {
+                currentUser = null;
+                localStorage.removeItem(LS_KEY);
+                localStorage.removeItem(LS_KEY + '_phone');
+            }
+            // 否则保留本地数据，等网络恢复后自动重试
+        }
+    } catch(e) {
+        // 网络错误：不清空本地数据，保留离线状态
+    }
+}
+
+async function loadVipDataFromServer() {
+    try {
+        const resp = await fetch('/api/vip-data', { headers: getAuthHeaders(), credentials: 'same-origin' });
+        const result = await resp.json();
+        if (result.ok && result.data) {
+            VIP_DATA = result.data;
+            renderVipContent();
+        }
+    } catch(e) {}
+}
+
+function renderUserArea() {
+    const area = document.getElementById('userArea');
+    if (!currentUser) {
+        area.innerHTML = '<button class="btn-sm" onclick="showLogin()">🔑 登录/注册</button>';
+        return;
+    }
+    const vip = currentUser.is_vip || isVip(currentUser);
+    const days = currentUser.vip_days_left || getVipDaysLeft(currentUser);
+    let html = '';
+    if (vip) {
+        html += '<span class="vip-tag">VIP</span>';
+    }
+    html += '<span class="user-name">' + escHtml(currentUser.nickname) + '</span>';
+    if (vip) {
+        html += '<span style="font-size:10px;color:var(--org)">' + days + '天</span>';
+    } else if (currentUser.verified) {
+        html += '<span style="font-size:10px;color:var(--red)">VIP过期</span>';
+    } else {
+        html += '<span style="font-size:10px;color:var(--t3)">未认证</span>';
+        html += '<button class="btn-sm" onclick="showVerifyModal()" style="font-size:10px">去认证</button>';
+    }
+    html += '<button class="btn-sm danger" onclick="logout()">退出</button>';
+    area.innerHTML = html;
+}
+
+function renderVipContent() {
+    const vip = currentUser && (currentUser.is_vip || isVip(currentUser));
+    const vipData = VIP_DATA || decodeVipData();
+    if (!vipData) return;
+
+    // VIP Kill card overlay
+    const lockVipKill = document.getElementById('lockVipKill');
+    if (vip) {
+        document.getElementById('a9KillContent').innerHTML =
+            '<div class="kill-num">' + vipData.a9_kill + '</div><div class="kill-meta">GBDT · 置信' + (vipData.a9_proba*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
+        document.getElementById('a11KillContent').innerHTML =
+            '<div class="kill-num">' + vipData.a11_kill + '</div><div class="kill-meta">GBDT · 置信' + (vipData.a11_proba*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
+        document.getElementById('daKillContent').innerHTML =
+            '<div class="kill-num">' + vipData.d1_kill + '</div><div class="kill-meta">集成10模型 · 置信' + ((1-vipData.d1_proba)*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
+        document.getElementById('d2KillContent').innerHTML =
+            '<div class="kill-num">' + vipData.d2_kill + '</div><div class="kill-meta">集成10模型 · 置信' + ((1-vipData.d2_proba)*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
+        const jk = vipData.joint_kills;
+        document.getElementById('jointKillContent').innerHTML =
+            '<div class="joint-kills">' + jk.map(k => '<span class="kill-num">' + k + '</span>').join('') + '</div><div class="kill-meta">预测第' + NEXT_PERIOD + '期</div>';
+        lockVipKill.style.display = 'none';
+    } else {
+        document.getElementById('a9KillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
+        document.getElementById('a11KillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
+        document.getElementById('daKillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
+        document.getElementById('d2KillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
+        document.getElementById('jointKillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
+        lockVipKill.style.display = 'flex';
+    }
+
+    // 6-code
+    const lockSix = document.getElementById('lockSix');
+    if (vip) {
+        const om = vipData.omissions;
+        const sorted = Object.entries(om).sort((a,b) => b[1].miss - a[1].miss);
+        const bg = vipData.best_group;
+        const maxM = sorted[0] ? sorted[0][1].miss : 1;
+        let html = '<div class="rec-box"><div class="rec-label">⬆ 遗漏最大组推荐</div>';
+        html += '<div class="rec-codes">' + vipData.best_codes.map(c => '<div class="code-ball">' + c + '</div>').join('') + '</div>';
+        html += '<div class="rec-miss">' + bg + ' · 当前遗漏 <strong>' + vipData.best_miss + '</strong> 期</div></div>';
+        html += '<table class="om-table"><thead><tr><th>组号</th><th>6码组合</th><th>遗漏期数</th><th></th></tr></thead><tbody>';
+        for (const [name, data] of sorted) {
+            const isB = name === bg;
+            const bH = isB ? ' class="best"' : '';
+            const badge = isB ? '<span class="rec-badge">推荐</span>' : '';
+            const bW = Math.min(data.miss / maxM * 100, 100);
+            html += '<tr' + bH + '><td>' + name + '</td><td class="code-cell">' + data.codes.join(' ') + '</td>';
+            html += '<td><div class="miss-bar-c"><div class="miss-bar" style="width:' + bW + '%"></div><span class="miss-val">' + data.miss + '期</span></div></td>';
+            html += '<td>' + badge + '</td></tr>';
+        }
+        html += '</tbody></table>';
+        document.getElementById('sixCodeContent').innerHTML = html;
+        lockSix.style.display = 'none';
+    } else {
+        document.getElementById('sixCodeContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
+        lockSix.style.display = 'flex';
+    }
+}
+
+// ==================== Modal ====================
+function showLogin() {
+    isRegisterMode = false;
+    updateModal();
+    document.getElementById('authModal').classList.add('show');
+    // 修复移动端键盘弹出遮挡输入框
+    setTimeout(function(){
+        document.querySelectorAll('#authModal input').forEach(function(el){
+            el.addEventListener('focus', function(){ 
+                var self = this;
+                setTimeout(function(){ self.scrollIntoView({block:'center', behavior:'smooth'}); }, 300);
+            });
+        });
+    }, 100);
+}
+function hideModal() { document.getElementById('authModal').classList.remove('show'); }
+
+function switchMode() {
+    isRegisterMode = !isRegisterMode;
+    updateModal();
+}
+
+function updateModal() {
+    document.getElementById('modalTitle').textContent = isRegisterMode ? '注册' : '登录';
+    document.getElementById('modalSub').textContent = isRegisterMode ? '注册后需完成实名认证即可获赠30天VIP' : '登录后查看全部分析数据';
+    document.getElementById('authBtn').textContent = isRegisterMode ? '注册' : '登录';
+    document.getElementById('switchLink').innerHTML = isRegisterMode
+        ? '已有账号？<span onclick="switchMode()">立即登录</span>'
+        : '还没有账号？<span onclick="switchMode()">立即注册</span>';
+    const nickShow = isRegisterMode ? '' : 'none';
+    document.getElementById('nickLabel').style.display = nickShow;
+    document.getElementById('authNick').style.display = nickShow;
+    // Clear errors
+    document.querySelectorAll('.error-msg').forEach(e => e.style.display = 'none');
+}
+
+async function handleAuth() {
+    const phone = document.getElementById('authPhone').value.trim();
+    const pwd = document.getElementById('authPwd').value;
+    const nick = document.getElementById('authNick').value.trim();
+    const errEl = document.getElementById('authErr');
+    errEl.style.display = 'none';
+
+    if (!/^1\d{10}$/.test(phone)) {
+        document.getElementById('phoneErr').style.display = 'block'; return;
+    } else { document.getElementById('phoneErr').style.display = 'none'; }
+
+    if (!pwd) {
+        document.getElementById('pwdErr').style.display = 'block'; return;
+    } else { document.getElementById('pwdErr').style.display = 'none'; }
+
+    const btn = document.getElementById('authBtn');
+    btn.disabled = true; btn.textContent = '请求中...';
+
+    try {
+        if (isRegisterMode) {
+            if (!nick) { document.getElementById('nickErr').style.display = 'block'; btn.disabled = false; btn.textContent = '注册'; return; }
+            else { document.getElementById('nickErr').style.display = 'none'; }
+            const res = await apiRegister(phone, pwd, nick);
+            if (!res.ok) { errEl.textContent = res.error || res.msg || '注册失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '注册'; return; }
+            // 保存token到localStorage
+            if (res.token) saveAuthToken(res.token);
+            currentUser = res.user; saveCurrentUser(); saveUserPhone();
+            hideModal(); refreshUI();
+            setTimeout(showVerifyModal, 500);
+        } else {
+            const res = await apiLogin(phone, pwd);
+            if (!res.ok) { errEl.textContent = res.error || res.msg || '登录失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '登录'; return; }
+            // 保存token到localStorage
+            if (res.token) saveAuthToken(res.token);
+            currentUser = res.user; saveCurrentUser(); saveUserPhone();
+            hideModal(); refreshUI();
+        }
+    } catch(e) {
+        errEl.textContent = '网络错误，请重试'; errEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = isRegisterMode ? '注册' : '登录';
+    }
+}
+
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+
+// ==================== 历史弹窗 ====================
+var histType = '', histShown = 0;
+var HIST_PAGE = 20;
+function openHistModal(type) {
+    histType = type; histShown = 0;
+    var titles = { a8: 'A8 杀码历史', vip: 'A9/A11/D1/D2 杀码历史', six: '6码推荐历史', t2: 'T2 位置杀码历史' };
+    document.getElementById('histModalTitle').textContent = titles[type] || '历史记录';
+    document.getElementById('histModalBody').innerHTML = '';
+    document.getElementById('histModal').classList.add('show');
+    loadHistPage();
+}
+function closeHistModal() { document.getElementById('histModal').classList.remove('show'); }
+function loadHistPage() {
+    var body = document.getElementById('histModalBody');
+    var total = PUB_HISTORY.length;
+    var start = Math.max(0, total - histShown - HIST_PAGE);
+    var end = total - histShown;
+    var vip = currentUser && (currentUser.is_vip || isVip(currentUser));
+    var vipData = vip ? (VIP_DATA || decodeVipData()) : null;
+    var h = '<table class="hist-tbl"><thead>';
+    if (histType === 'a8') {
+        h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>A8杀码</th><th>结果</th></tr></thead><tbody>';
+        for (var i = end - 1; i >= start; i--) {
+            var it = PUB_HISTORY[i];
+            var mk = it.a8_ok ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
+            h += '<tr><td>' + it.period.slice(-3) + '</td><td>' + (it.date||'').slice(5) + '</td>';
+            h += '<td><span class="draw-num">' + it.draw + '</span></td>';
+            h += '<td><span class="kill-val">' + (it.a8_kill != null ? it.a8_kill : '-') + '</span></td>';
+            h += '<td>' + (it.a8_kill != null ? mk : '-') + '</td></tr>';
+        }
+    } else if (histType === 'vip') {
+        h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>A9</th><th></th><th>A11</th><th></th><th>D1</th><th></th><th>D2</th><th></th></tr></thead><tbody>';
+        for (var i = end - 1; i >= start; i--) {
+            var it = PUB_HISTORY[i];
+            if (!vip || !vipData || !vipData.history_vip || i >= vipData.history_vip.length) {
+                h += '<tr><td>' + it.period.slice(-3) + '</td><td>' + (it.date||'').slice(5) + '</td>';
+                h += '<td><span class="draw-num">' + it.draw + '</span></td>';
+                h += '<td colspan="8" style="color:var(--org);font-size:10px">🔒 VIP查看</td></tr>';
+            } else {
+                var v = vipData.history_vip[i];
+                var a9m = v.a9o ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
+                var a11m = v.a11o ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
+                var dam = v.dao ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
+                var d2m = v.d2o ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
+                h += '<tr><td>' + it.period.slice(-3) + '</td><td>' + (it.date||'').slice(5) + '</td>';
+                h += '<td><span class="draw-num">' + it.draw + '</span></td>';
+                h += '<td><span class="kill-val">' + v.a9k + '</span></td><td>' + a9m + '</td>';
+                h += '<td><span class="kill-val">' + v.a11k + '</span></td><td>' + a11m + '</td>';
+                h += '<td><span class="kill-val">' + v.dak + '</span></td><td>' + dam + '</td>';
+                h += '<td><span class="kill-val">' + v.d2k + '</span></td><td>' + d2m + '</td></tr>';
+            }
+        }
+    } else if (histType === 'six') {
+        h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>推荐组</th><th>6码</th><th>结果</th></tr></thead><tbody>';
+        if (!vip || !vipData || !vipData.six_history) {
+            h += '<tr><td colspan="6" style="color:var(--org);font-size:11px">🔒 VIP解锁查看6码历史</td></tr>';
+        } else {
+            var sh = vipData.six_history;
+            var sS = Math.max(0, sh.length - histShown - HIST_PAGE);
+            var sE = Math.min(sh.length, sh.length - histShown);
+            for (var i = sE - 1; i >= sS; i--) {
+                var s = sh[i];
+                var mk = s.hit ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
+                h += '<tr><td>' + (s.p||'').slice(-3) + '</td><td>' + (s.d||'').slice(5) + '</td>';
+                h += '<td><span class="draw-num">' + (s.w||'-') + '</span></td>';
+                h += '<td>' + (s.g||'-') + '</td><td style="font-size:11px">' + (s.c||'-') + '</td>';
+                h += '<td>' + mk + '</td></tr>';
+            }
+        }
+    } else if (histType === 't2') {
+        h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>百位杀</th><th>十位杀</th><th>个位杀</th></tr></thead><tbody>';
+        for (var i = end - 1; i >= start; i--) {
+            var it = PUB_HISTORY[i];
+            h += '<tr><td>' + it.period.slice(-3) + '</td><td>' + (it.date||'').slice(5) + '</td>';
+            h += '<td><span class="draw-num">' + it.draw + '</span></td>';
+            h += '<td>' + (it.t2_b !== undefined ? it.t2_b : '-') + '</td>';
+            h += '<td>' + (it.t2_s !== undefined ? it.t2_s : '-') + '</td>';
+            h += '<td>' + (it.t2_g !== undefined ? it.t2_g : '-') + '</td></tr>';
+        }
+    }
+    h += '</tbody></table>';
+    body.innerHTML = h;
+    histShown += (end - start);
+    var btn = document.getElementById('histLoadBtn');
+    var maxI = histType === 'six' ? (vip && vipData && vipData.six_history ? vipData.six_history.length : 0) : total;
+    if (histShown >= maxI) { btn.disabled = true; btn.textContent = '已显示全部（共' + maxI + '期）'; }
+    else { btn.disabled = false; btn.textContent = '加载更多（剩余' + (maxI - histShown) + '期）'; }
+}
+function loadMoreHist() { loadHistPage(); }
+
+// ==================== 图表渲染 ====================
+function renderChart1() {
+    var cd = window.__CHART_DATA__;
+    if (!cd || !cd.chart1) return;
+    var c1 = cd.chart1;
+    var tbody = document.getElementById('chart1Body');
+    if (!tbody) return;
+    var algKeys = ['a8','a9','a11','d1','d2'];
+    var algNames = ['A8','A9','A11','D1','D2'];
+    var n = c1.periods.length;
+    // 统计各算法正确数
+    var algOk = {}, algTotal = {};
+    algKeys.forEach(function(k){ algOk[k]=0; algTotal[k]=0; });
+    var h = '';
+    for (var i = 0; i < n; i++) {
+        var rowClass = c1.all_right[i] ? ' class="all-right-row"' : '';
+        h += '<tr' + rowClass + '>';
+        h += '<td class="period-col">' + c1.periods[i] + '</td>';
+        h += '<td class="draw-col">' + c1.draws[i] + '</td>';
+        for (var j = 0; j < algKeys.length; j++) {
+            var alg = algKeys[j];
+            var cell = c1[alg][i];
+            if (cell.kill !== null && cell.kill !== undefined) {
+                algTotal[alg]++;
+                if (cell.ok) {
+                    algOk[alg]++;
+                    h += '<td class="kill-cell kill-ok">' + cell.kill + ' ✓</td>';
+                } else {
+                    h += '<td class="kill-cell kill-fail">' + cell.kill + ' ✗</td>';
+                }
+            } else {
+                h += '<td class="kill-cell kill-na">-</td>';
+            }
+        }
+        h += '<td class="consensus-col">' + c1.consensus[i] + '</td>';
+        h += '</tr>';
+    }
+    // 底部统计行
+    h += '<tr class="summary-row"><td colspan="2" style="text-align:right">正确率 →</td>';
+    for (var j = 0; j < algKeys.length; j++) {
+        var alg = algKeys[j];
+        var pct = algTotal[alg] > 0 ? (algOk[alg]/algTotal[alg]*100).toFixed(1) + '%' : '-';
+        h += '<td>' + pct + '</td>';
+    }
+    h += '<td>-</td></tr>';
+    tbody.innerHTML = h;
+}
+
+function renderChart2() {
+    var cd = window.__CHART_DATA__;
+    if (!cd || !cd.chart2) return;
+    var c2 = cd.chart2;
+    var algLabels = ['A8','A9','A11','D1','D2'];
+    var algKeys = ['a8','a9','a11','d1','d2'];
+    var algColors = ['#2196F3','#4CAF50','#FF9800','#9C27B0','#E91E63'];
+    var currentData = algKeys.map(function(k){ return c2.current_streaks[k]; });
+    var maxData = algKeys.map(function(k){ return c2.max_streaks[k]; });
+    var canvas = document.getElementById('chart2Canvas');
+    if (!canvas) return;
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: algLabels,
+            datasets: [
+                {
+                    label: '当前连胜',
+                    data: currentData,
+                    backgroundColor: 'rgba(59,130,246,.7)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                },
+                {
+                    label: '历史最长连胜',
+                    data: maxData,
+                    backgroundColor: 'rgba(255,215,0,.7)',
+                    borderColor: '#ffd700',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: { color: '#8b95b0', font: { size: 11 } }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#8b95b0', font: { size: 11 } },
+                    grid: { color: 'rgba(42,53,85,.4)' }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#8b95b0', font: { size: 10 }, stepSize: 5 },
+                    grid: { color: 'rgba(42,53,85,.4)' }
+                }
+            }
+        }
+    });
+    // 准确率行
+    var accRow = document.getElementById('chart2AccRow');
+    if (accRow) {
+        var ah = '';
+        for (var i = 0; i < algKeys.length; i++) {
+            ah += '<div class="chart2-acc-item"><span class="alg-name" style="color:' + algColors[i] + '">' + algLabels[i] + '</span><span class="acc-val">' + c2.accuracy_30d[algKeys[i]] + '%</span></div>';
+        }
+        accRow.innerHTML = ah;
+    }
+}
+
+// ==================== Init ====================
+renderChart1();
+renderChart2();
+refreshUI();
+</script>
+</body>
+</html>
