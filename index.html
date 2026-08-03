@@ -185,9 +185,7 @@ background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:15px;fon
 .chart2-acc-item .acc-val{color:var(--grn);font-weight:600}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leancloud-storage/dist/av-min.js"></script>
 </head>
 <body>
 <div class="ctr">
@@ -423,32 +421,29 @@ const NEXT_PERIOD = '205';
 // 图表数据（Python端预计算）
 window.__CHART_DATA__ = {"chart1": {"periods": ["175", "176", "177", "178", "179", "180", "181", "182", "183", "184", "185", "186", "187", "188", "189", "190", "191", "192", "193", "194", "195", "196", "197", "198", "199", "200", "201", "202", "203", "204"], "draws": ["421", "269", "808", "266", "993", "520", "818", "662", "923", "902", "397", "045", "023", "969", "558", "026", "906", "425", "254", "283", "275", "419", "232", "685", "591", "912", "321", "988", "435", "978"], "a8": [{"kill": 1, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 1, "ok": true}, {"kill": 1, "ok": true}, {"kill": 0, "ok": false}, {"kill": 7, "ok": true}, {"kill": 0, "ok": true}, {"kill": 1, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 0, "ok": false}, {"kill": 7, "ok": true}, {"kill": 5, "ok": true}, {"kill": 0, "ok": true}, {"kill": 0, "ok": false}, {"kill": 1, "ok": true}, {"kill": 1, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 3, "ok": true}, {"kill": 0, "ok": true}, {"kill": 5, "ok": true}, {"kill": 9, "ok": true}, {"kill": 1, "ok": false}, {"kill": 0, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": null, "ok": null}], "a9": [{"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 3, "ok": true}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 1, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "a11": [{"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 9, "ok": true}, {"kill": 3, "ok": false}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 8, "ok": true}, {"kill": 0, "ok": true}, {"kill": 4, "ok": true}, {"kill": 4, "ok": true}, {"kill": 4, "ok": false}, {"kill": 2, "ok": false}, {"kill": 4, "ok": true}, {"kill": 9, "ok": true}, {"kill": 4, "ok": false}, {"kill": 5, "ok": true}, {"kill": 4, "ok": true}, {"kill": 1, "ok": false}, {"kill": 0, "ok": true}, {"kill": 1, "ok": false}, {"kill": 2, "ok": true}, {"kill": 1, "ok": true}, {"kill": 8, "ok": false}], "d1": [{"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 5, "ok": true}, {"kill": 0, "ok": true}, {"kill": 3, "ok": true}, {"kill": 4, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 2, "ok": true}, {"kill": 5, "ok": true}, {"kill": 4, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 1, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "d2": [{"kill": 3, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 5, "ok": true}, {"kill": 2, "ok": true}, {"kill": 3, "ok": true}, {"kill": 4, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 2, "ok": false}, {"kill": 2, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "all_right": [false, true, true, true, true, false, true, true, false, true, true, false, true, true, false, false, true, false, false, true, false, false, true, true, false, true, false, true, true, false], "consensus": [2, 3, 3, 2, 4, 4, 4, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 2, 2, 5, 2, 3, 3, 4, 2, 3, 1]}, "chart2": {"current_streaks": {"a8": 0, "a9": 0, "a11": 0, "d1": 0, "d2": 0}, "max_streaks": {"a8": 13, "a9": 17, "a11": 17, "d1": 17, "d2": 17}, "accuracy_30d": {"a8": 82.8, "a9": 82.8, "a11": 73.3, "d1": 89.7, "d2": 89.7}}};
 
-// ==================== Firebase 配置 ====================
-// ⚠️ 部署前请替换为你的Firebase项目配置
-const firebaseConfig = {
-    apiKey: "AIzaSyB_PLACEHOLDER_KEY",
-    authDomain: "fc3d-webapp.firebaseapp.com",
-    projectId: "fc3d-webapp",
-    storageBucket: "fc3d-webapp.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef"
+// ==================== LeanCloud 配置 ====================
+// ⚠️ 部署前请替换为你的LeanCloud应用配置
+const LEANCLOUD_CONFIG = {
+    appId: "YOUR_LEANCLOUD_APP_ID",
+    appKey: "YOUR_LEANCLOUD_APP_KEY",
+    serverURL: "https://YOUR_LEANCLOUD_SERVER_URL"
 };
 
 // 管理员邮箱
 const ADMIN_EMAIL = 'sujin-feng@coze.email';
 
-// 初始化Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+// 初始化LeanCloud
+AV.init({
+    appId: LEANCLOUD_CONFIG.appId,
+    appKey: LEANCLOUD_CONFIG.appKey,
+    serverURL: LEANCLOUD_CONFIG.serverURL
+});
 
 // ==================== 会员系统 ====================
-const LS_USER_KEY = 'fc3d_firebase_user';
+const LS_USER_KEY = 'fc3d_leancloud_user';
 let currentUser = null;
 let isRegisterMode = false;
 let VIP_DATA = null;
-let userDocRef = null;
-let unsubscribeUser = null;
 
 function loadCurrentUser() {
     try {
@@ -483,22 +478,27 @@ function isAdmin() {
     return currentUser && currentUser.email === ADMIN_EMAIL;
 }
 
-// ==================== Firebase Auth ====================
+// ==================== LeanCloud Auth ====================
 async function doRegister(email, pwd, nick) {
-    const cred = await auth.createUserWithEmailAndPassword(email, pwd);
-    const user = cred.user;
-    if (nick) await user.updateProfile({ displayName: nick });
-    // Create user doc in Firestore
-    await db.collection('users').doc(user.uid).set({
-        email: email,
-        nickname: nick || email.split('@')[0],
-        vip_level: 0,
-        register_time: firebase.firestore.FieldValue.serverTimestamp(),
-        last_login: firebase.firestore.FieldValue.serverTimestamp(),
-        created_at: new Date().toISOString()
-    });
+    // 创建用户账号（username 使用邮箱，便于后续邮箱登录）
+    const user = new AV.User();
+    user.setUsername(email);
+    user.setPassword(pwd);
+    user.setEmail(email);
+    user.set('nickname', nick || email.split('@')[0]);
+    user.set('vip_level', 0);
+    await user.signUp();
+    // 创建 UserProfile 记录（存储用户资料，支持管理员修改VIP等级）
+    const profile = new AV.Object('UserProfile');
+    profile.set('user_id', user.id);
+    profile.set('email', email);
+    profile.set('nickname', nick || email.split('@')[0]);
+    profile.set('vip_level', 0);
+    profile.set('created_at', new Date().toISOString());
+    profile.set('last_login', new Date());
+    await profile.save();
     return { ok: true, user: {
-        uid: user.uid,
+        uid: user.id,
         email: email,
         nickname: nick || email.split('@')[0],
         vip_level: 0
@@ -506,60 +506,58 @@ async function doRegister(email, pwd, nick) {
 }
 
 async function doLogin(email, pwd) {
-    const cred = await auth.signInWithEmailAndPassword(email, pwd);
-    const user = cred.user;
-    // Update last login
-    await db.collection('users').doc(user.uid).update({
-        last_login: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(() => {});
-    return { ok: true, uid: user.uid, email: user.email, nickname: user.displayName || '' };
+    const user = await AV.User.loginWithEmail(email, pwd);
+    // 查询 UserProfile 获取昵称和VIP等级
+    const query = new AV.Query('UserProfile');
+    query.equalTo('user_id', user.id);
+    const profile = await query.first();
+    const nickname = profile ? (profile.get('nickname') || '') : '';
+    // 更新最后登录时间
+    if (profile) {
+        profile.set('last_login', new Date());
+        await profile.save().catch(() => {});
+    }
+    return { ok: true, uid: user.id, email: email, nickname: nickname };
 }
 
 async function doLogout() {
-    if (unsubscribeUser) { unsubscribeUser(); unsubscribeUser = null; }
-    await auth.signOut();
+    AV.User.logOut();
     currentUser = null;
     VIP_DATA = null;
     localStorage.removeItem(LS_USER_KEY);
     refreshUI();
 }
 
-// ==================== Firestore 用户数据 ====================
-function startUserListener(uid) {
-    if (unsubscribeUser) { unsubscribeUser(); unsubscribeUser = null; }
-    userDocRef = db.collection('users').doc(uid);
-    unsubscribeUser = userDocRef.onSnapshot((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            currentUser = {
-                uid: uid,
-                email: data.email || auth.currentUser?.email || '',
-                nickname: data.nickname || '',
-                vip_level: data.vip_level || 0,
-                register_time: data.register_time?.toDate()?.toISOString() || '',
-                last_login: data.last_login?.toDate()?.toISOString() || ''
-            };
-            saveCurrentUser();
-            renderUserArea();
-            renderVipContent();
-        }
-    }, (err) => {
-        console.error('User listener error:', err);
-    });
-}
-
-async function ensureUserDoc(uid, email) {
-    const doc = await db.collection('users').doc(uid).get();
-    if (!doc.exists) {
-        await db.collection('users').doc(uid).set({
-            email: email,
-            nickname: email.split('@')[0],
-            vip_level: 0,
-            register_time: firebase.firestore.FieldValue.serverTimestamp(),
-            last_login: firebase.firestore.FieldValue.serverTimestamp(),
-            created_at: new Date().toISOString()
-        });
+// ==================== LeanCloud 用户数据 ====================
+async function fetchUserData(uid) {
+    const query = new AV.Query('UserProfile');
+    query.equalTo('user_id', uid);
+    const profile = await query.first();
+    if (profile) {
+        currentUser = {
+            uid: uid,
+            email: profile.get('email') || '',
+            nickname: profile.get('nickname') || '',
+            vip_level: profile.get('vip_level') || 0,
+            register_time: profile.get('created_at') || '',
+            last_login: profile.get('last_login') ? new Date(profile.get('last_login')).toISOString() : ''
+        };
+    } else {
+        // UserProfile 不存在，尝试从 _User 表获取基本信息
+        const userQuery = new AV.Query(AV.User);
+        const avUser = await userQuery.get(uid);
+        currentUser = {
+            uid: uid,
+            email: avUser.get('email') || avUser.get('username') || '',
+            nickname: avUser.get('nickname') || '',
+            vip_level: avUser.get('vip_level') || 0,
+            register_time: avUser.createdAt ? avUser.createdAt.toISOString() : '',
+            last_login: ''
+        };
     }
+    saveCurrentUser();
+    renderUserArea();
+    renderVipContent();
 }
 
 // ==================== VIP数据解码 ====================
@@ -573,20 +571,21 @@ function decodeVipData() {
 // ==================== UI ====================
 async function refreshUI() {
     if (!currentUser) loadCurrentUser();
-    // Check Firebase auth state
-    const fbUser = auth.currentUser;
-    if (fbUser) {
-        // Ensure user doc exists, then start listener
-        await ensureUserDoc(fbUser.uid, fbUser.email);
-        startUserListener(fbUser.uid);
-    } else if (currentUser) {
-        // Try to re-auth with persistence
+    // Check LeanCloud auth state
+    const lcUser = AV.User.current();
+    if (lcUser) {
+        // Fetch latest user data from cloud
         try {
-            // Firebase handles persistence automatically
-            // If no currentUser, clear local state
+            await fetchUserData(lcUser.id);
+        } catch(e) {
+            // Session may be expired, clear local state
             currentUser = null;
             localStorage.removeItem(LS_USER_KEY);
-        } catch(e) {}
+        }
+    } else if (currentUser) {
+        // No active LeanCloud session, clear local state
+        currentUser = null;
+        localStorage.removeItem(LS_USER_KEY);
     }
     renderUserArea();
     renderVipContent();
@@ -738,25 +737,24 @@ async function handleAuth() {
             if (!res.ok) { errEl.textContent = '注册失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '注册'; return; }
             currentUser = res.user;
             saveCurrentUser();
-            startUserListener(res.user.uid);
+            fetchUserData(res.user.uid);
             hideModal(); refreshUI();
         } else {
             const res = await doLogin(email, pwd);
             if (!res.ok) { errEl.textContent = '登录失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '登录'; return; }
             currentUser = { uid: res.uid, email: res.email, nickname: res.nickname, vip_level: 0 };
             saveCurrentUser();
-            startUserListener(res.uid);
+            fetchUserData(res.uid);
             hideModal(); refreshUI();
         }
     } catch(e) {
         let errMsg = '操作失败，请重试';
-        if (e.code === 'auth/email-already-in-use') errMsg = '该邮箱已注册';
-        else if (e.code === 'auth/invalid-email') errMsg = '邮箱格式不正确';
-        else if (e.code === 'auth/weak-password') errMsg = '密码太弱，请至少6位';
-        else if (e.code === 'auth/user-not-found') errMsg = '该邮箱未注册';
-        else if (e.code === 'auth/wrong-password') errMsg = '密码错误';
-        else if (e.code === 'auth/invalid-credential') errMsg = '邮箱或密码错误';
-        else if (e.code === 'auth/too-many-requests') errMsg = '请求太频繁，请稍后再试';
+        if (e.code === 202) errMsg = '该邮箱已注册';
+        else if (e.code === 203) errMsg = '该邮箱已被占用';
+        else if (e.code === 125) errMsg = '邮箱格式不正确';
+        else if (e.code === 210) errMsg = '邮箱或密码错误';
+        else if (e.code === 211) errMsg = '该邮箱未注册';
+        else if (e.code === 1) errMsg = '请求太频繁，请稍后再试';
         errEl.textContent = errMsg; errEl.style.display = 'block';
         btn.disabled = false; btn.textContent = isRegisterMode ? '注册' : '登录';
     }
@@ -779,13 +777,16 @@ async function adminSetVip() {
     if (!email) { msgEl.style.color = 'var(--red)'; msgEl.textContent = '请输入用户邮箱'; return; }
     msgEl.style.color = 'var(--t2)'; msgEl.textContent = '设置中...';
     try {
-        // Find user by email
-        const snap = await db.collection('users').where('email', '==', email).get();
-        if (snap.empty) {
+        // 在 UserProfile 表中按邮箱查找用户
+        const query = new AV.Query('UserProfile');
+        query.equalTo('email', email);
+        const results = await query.find();
+        if (results.length === 0) {
             msgEl.style.color = 'var(--red)'; msgEl.textContent = '未找到该邮箱的用户'; return;
         }
-        const doc = snap.docs[0];
-        await doc.ref.update({ vip_level: level });
+        const profile = results[0];
+        profile.set('vip_level', level);
+        await profile.save();
         const levelName = getVipLevelName(level);
         msgEl.style.color = '#22c55e'; msgEl.textContent = '✅ 已将 ' + email + ' 设置为 ' + levelName;
         loadAdminUserList();
@@ -797,17 +798,20 @@ async function adminSetVip() {
 async function loadAdminUserList() {
     const listEl = document.getElementById('adminUserList');
     try {
-        const snap = await db.collection('users').orderBy('register_time', 'desc').limit(50).get();
-        if (snap.empty) { listEl.innerHTML = '<div style="text-align:center;color:var(--t3)">暂无用户</div>'; return; }
+        const query = new AV.Query('UserProfile');
+        query.descending('createdAt');
+        query.limit(50);
+        const results = await query.find();
+        if (results.length === 0) { listEl.innerHTML = '<div style="text-align:center;color:var(--t3)">暂无用户</div>'; return; }
         let html = '<table style="width:100%;border-collapse:collapse">';
         html += '<tr style="border-bottom:1px solid var(--bd)"><th style="text-align:left;padding:4px">邮箱</th><th style="padding:4px">等级</th><th style="padding:4px">注册时间</th></tr>';
-        snap.forEach(doc => {
-            const d = doc.data();
-            const level = d.vip_level || 0;
+        results.forEach(profile => {
+            const level = profile.get('vip_level') || 0;
             const levelColor = level > 0 ? 'var(--org)' : 'var(--t3)';
-            const regTime = d.created_at ? new Date(d.created_at).toLocaleDateString('zh-CN') : '-';
+            const createdStr = profile.get('created_at') || '';
+            const regTime = createdStr ? new Date(createdStr).toLocaleDateString('zh-CN') : '-';
             html += '<tr style="border-bottom:1px solid rgba(42,53,85,.3)">';
-            html += '<td style="padding:4px;font-size:11px;word-break:break-all">' + (d.email || '-') + '</td>';
+            html += '<td style="padding:4px;font-size:11px;word-break:break-all">' + (profile.get('email') || '-') + '</td>';
             html += '<td style="padding:4px;text-align:center;color:' + levelColor + ';font-weight:600">' + getVipLevelName(level) + '</td>';
             html += '<td style="padding:4px;text-align:center">' + regTime + '</td>';
             html += '</tr>';
