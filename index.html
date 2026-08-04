@@ -467,7 +467,7 @@ function renderChart1() {
     var algOk = {}, algTotal = {};
     algKeys.forEach(function(k){ algOk[k]=0; algTotal[k]=0; });
     var h = '';
-    for (var i = 0; i < n; i++) {
+    for (var i = n - 1; i >= 0; i--) {
         var rowClass = c1.all_right[i] ? ' class="all-right-row"' : '';
         h += '<tr' + rowClass + '>';
         h += '<td class="period-col">' + c1.periods[i] + '</td>';
