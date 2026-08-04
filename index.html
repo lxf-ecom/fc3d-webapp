@@ -285,7 +285,7 @@ function loadData() {
         var d = window.__EMBED_DATA__;
         DATA = d;
         document.getElementById('loadingScreen').style.display = 'none';
-        render(d);
+        renderAll();
     } catch(e) {
         console.error('Render error:', e);
         document.getElementById('loadingScreen').style.display = 'none';
