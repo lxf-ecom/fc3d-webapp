@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    { "source": "/api/register", "destination": "/api/index" },
+    { "source": "/api/login", "destination": "/api/index" },
+    { "source": "/api/me", "destination": "/api/index" },
+    { "source": "/api/admin/set-vip", "destination": "/api/index" },
+    { "source": "/api/admin/users", "destination": "/api/index" },
+    { "source": "/api/health", "destination": "/api/index" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    }
+  ]
+}
