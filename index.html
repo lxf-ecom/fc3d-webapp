@@ -17,12 +17,6 @@ background:var(--bg0);color:var(--t1);min-height:100vh;line-height:1.6;-webkit-f
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px}
 .topbar .brand{font-size:13px;color:var(--t3);font-weight:500}
 .topbar .user-area{display:flex;align-items:center;gap:8px}
-.topbar .user-name{font-size:12px;color:var(--grn);font-weight:600}
-.topbar .vip-tag{font-size:10px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;padding:2px 6px;border-radius:4px;font-weight:600}
-.topbar .btn-sm{font-size:11px;padding:4px 10px;border-radius:8px;cursor:pointer;border:1px solid var(--bd);background:var(--bg1);color:var(--t2);transition:all .2s}
-.topbar .btn-sm:hover{background:var(--bg2);color:var(--t1)}
-.topbar .btn-sm.danger{color:var(--red);border-color:rgba(255,71,87,.3)}
-.topbar .btn-sm.danger:hover{background:var(--redbg)}
 
 /* Header */
 .header{text-align:center;padding:12px 0 8px}
@@ -52,15 +46,6 @@ background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;
 .badge-note{background:var(--orgbg);color:var(--org)}
 .badge-vip{background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff}
 
-/* VIP lock overlay */
-.vip-lock{position:absolute;inset:0;background:rgba(10,14,26,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:16px;gap:8px}
-.vip-lock .lock-icon{font-size:32px;opacity:.8}
-.vip-lock .lock-text{font-size:14px;color:var(--org);font-weight:600}
-.vip-lock .lock-btn{font-size:12px;padding:8px 20px;border-radius:20px;border:none;
-background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;font-weight:600;cursor:pointer;transition:transform .2s}
-.vip-lock .lock-btn:hover{transform:scale(1.05)}
-.vip-lock .lock-btn:active{transform:scale(.97)}
 
 /* Kill Grid */
 .kill-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -191,7 +176,7 @@ background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:15px;fon
     <!-- Top bar -->
     <div class="topbar">
         <div class="brand">📊 FC3D Analytics</div>
-        <div class="user-area" id="userArea"></div>
+        <div class="user-area"><span style="font-size:11px;color:var(--t3)">🌐 全站公开</span></div>
     </div>
 
     <!-- Header -->
@@ -243,43 +228,42 @@ background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:15px;fon
     <div class="card" id="vipKillCard" style="position:relative;min-height:160px">
         <div class="card-title">
             <span class="icon">🔮</span>高级杀码分析 · 第205期预测
-            <span class="badge badge-vip">VIP</span>
-        </div>
+            </div>
         <div class="kill-grid" id="vipKillGrid" style="grid-template-columns:1fr 1fr">
             <div class="kill-item" id="a9KillCard">
                 <div class="kill-label">A9 算法</div>
-                <div id="a9KillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+                <div id="a9KillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">加载中...</div></div>
             </div>
             <div class="kill-item" id="a11KillCard">
                 <div class="kill-label">A11 算法</div>
-                <div id="a11KillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+                <div id="a11KillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">加载中...</div></div>
             </div>
             <div class="kill-item" id="daKillCard">
                 <div class="kill-label">D1 地妖一号算法</div>
-                <div id="daKillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+                <div id="daKillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">加载中...</div></div>
             </div>
             <div class="kill-item" id="d2KillCard">
                 <div class="kill-label">D2 地妖二号算法</div>
-                <div id="d2KillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+                <div id="d2KillContent"><div class="kill-num" style="color:var(--t3)">—</div><div class="kill-meta" style="color:var(--t3)">加载中...</div></div>
             </div>
             <div class="kill-item joint" id="jointKillCard" style="grid-column:1/-1">
                 <div class="kill-label">联合杀码（并集）</div>
-                <div id="jointKillContent"><div class="kill-num" style="color:var(--t3);font-size:24px">— —</div><div class="kill-meta" style="color:var(--t3)">VIP解锁查看</div></div>
+                <div id="jointKillContent"><div class="kill-num" style="color:var(--t3);font-size:24px">— —</div><div class="kill-meta" style="color:var(--t3)">加载中...</div></div>
             </div>
         </div>
         <div style="text-align:center;margin-top:10px"><button class="hist-btn" onclick="openHistModal('vip')">📋 查看A9/A11/D1/D2历史记录</button></div>
-        <div class="vip-lock" id="lockVipKill"><div class="lock-icon">🔒</div><div class="lock-text">VIP专属功能</div><button class="lock-btn" onclick="showLogin()">开通VIP查看全部分析</button></div>
+        
     </div>
 
     <!-- 6码推荐 (VIP) -->
     <div class="card" id="sixCodeCard" style="position:relative;min-height:180px">
-        <div class="card-title"><span class="icon">🔢</span>6码推荐<span class="badge badge-vip">VIP</span></div>
+        <div class="card-title"><span class="icon">🔢</span>6码推荐 <span class="badge badge-note">公开</span></div>
         <div id="sixCodeContent">
             <table class="om-table"><thead><tr><th>组号</th><th>6码组合</th><th>遗漏期数</th><th></th></tr></thead>
-            <tbody><tr><td>G0</td><td class="code-cell">— — — — — —</td><td><span style="color:var(--t3)">VIP解锁</span></td><td></td></tr></tbody></table>
+            <tbody><tr><td>G0</td><td class="code-cell">— — — — — —</td><td><span style="color:var(--t3)">加载中...</span></td><td></td></tr></tbody></table>
         </div>
         <div style="text-align:center;margin-top:10px"><button class="hist-btn" onclick="openHistModal('six')">📋 查看6码历史记录</button></div>
-        <div class="vip-lock" id="lockSix"><div class="lock-icon">🔒</div><div class="lock-text">VIP专属功能</div><button class="lock-btn" onclick="showLogin()">开通VIP查看全部分析</button></div>
+        
     </div>
 
     <!-- Ad: Native -->
@@ -346,53 +330,7 @@ background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:15px;fon
     </div>
 </div>
 
-<!-- Login/Register Modal -->
-<div class="modal-overlay" id="authModal">
-    <div class="modal-box" style="position:relative">
-        <button class="close-btn" onclick="hideModal()">&times;</button>
-        <h2 id="modalTitle">登录</h2>
-        <div class="modal-sub" id="modalSub">登录后查看全部分析数据</div>
-        <label>邮箱</label>
-        <input type="email" id="authEmail" placeholder="请输入邮箱地址">
-        <div class="error-msg" id="emailErr">请输入正确的邮箱地址</div>
-        <label>密码</label>
-        <input type="password" id="authPwd" placeholder="请输入密码（至少6位）" maxlength="20">
-        <div class="error-msg" id="pwdErr">密码不能为空</div>
-        <label id="nickLabel" style="display:none">昵称</label>
-        <input type="text" id="authNick" placeholder="请输入昵称" maxlength="10" style="display:none">
-        <div class="error-msg" id="nickErr">昵称不能为空</div>
-        <div class="error-msg" id="authErr" style="text-align:center;margin-top:8px"></div>
-        <button class="btn-primary" id="authBtn" onclick="handleAuth()">登录</button>
-        <div class="switch-link" id="switchLink">还没有账号？<span onclick="switchMode()">立即注册</span></div>
-    </div>
-</div>
 
-<!-- 管理员面板 -->
-<div class="modal-overlay" id="adminModal">
-    <div class="modal-box">
-        <button class="close-btn" onclick="closeAdminModal()">&times;</button>
-        <div class="modal-title" style="font-size:18px;font-weight:700;text-align:center;margin-bottom:4px">🔧 管理员面板</div>
-        <div style="font-size:12px;color:var(--t2);margin-bottom:16px;line-height:1.6;text-align:center">
-            设置用户VIP等级
-        </div>
-        <label>用户邮箱</label>
-        <input type="email" id="adminUserEmail" placeholder="输入用户邮箱地址">
-        <label>VIP等级</label>
-        <select id="adminVipLevel" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg1);color:var(--t1);font-size:14px;outline:none">
-            <option value="0">0 - 免费用户</option>
-            <option value="1">1 - VIP用户</option>
-            <option value="2">2 - 高级VIP</option>
-            <option value="99">99 - 终身VIP</option>
-        </select>
-        <div id="adminMsg" style="font-size:12px;min-height:18px;margin-top:8px"></div>
-        <button class="btn-primary" onclick="adminSetVip()">设置VIP等级</button>
-        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
-            <div style="font-size:12px;color:var(--t2);margin-bottom:8px;text-align:center">所有注册用户</div>
-            <div id="adminUserList" style="max-height:200px;overflow-y:auto;font-size:11px;color:var(--t2)"></div>
-        </div>
-        <div class="switch-link" onclick="closeAdminModal()">关闭</div>
-    </div>
-</div>
 
 
 <!-- 历史记录弹窗 -->
@@ -420,127 +358,12 @@ const NEXT_PERIOD = '205';
 // 图表数据（Python端预计算）
 window.__CHART_DATA__ = {"chart1": {"periods": ["175", "176", "177", "178", "179", "180", "181", "182", "183", "184", "185", "186", "187", "188", "189", "190", "191", "192", "193", "194", "195", "196", "197", "198", "199", "200", "201", "202", "203", "204"], "draws": ["421", "269", "808", "266", "993", "520", "818", "662", "923", "902", "397", "045", "023", "969", "558", "026", "906", "425", "254", "283", "275", "419", "232", "685", "591", "912", "321", "988", "435", "978"], "a8": [{"kill": 1, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 1, "ok": true}, {"kill": 1, "ok": true}, {"kill": 0, "ok": false}, {"kill": 7, "ok": true}, {"kill": 0, "ok": true}, {"kill": 1, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 0, "ok": false}, {"kill": 7, "ok": true}, {"kill": 5, "ok": true}, {"kill": 0, "ok": true}, {"kill": 0, "ok": false}, {"kill": 1, "ok": true}, {"kill": 1, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 3, "ok": true}, {"kill": 0, "ok": true}, {"kill": 5, "ok": true}, {"kill": 9, "ok": true}, {"kill": 1, "ok": false}, {"kill": 0, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": null, "ok": null}], "a9": [{"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 3, "ok": true}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 1, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "a11": [{"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 7, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 9, "ok": true}, {"kill": 3, "ok": false}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 8, "ok": true}, {"kill": 0, "ok": true}, {"kill": 4, "ok": true}, {"kill": 4, "ok": true}, {"kill": 4, "ok": false}, {"kill": 2, "ok": false}, {"kill": 4, "ok": true}, {"kill": 9, "ok": true}, {"kill": 4, "ok": false}, {"kill": 5, "ok": true}, {"kill": 4, "ok": true}, {"kill": 1, "ok": false}, {"kill": 0, "ok": true}, {"kill": 1, "ok": false}, {"kill": 2, "ok": true}, {"kill": 1, "ok": true}, {"kill": 8, "ok": false}], "d1": [{"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 5, "ok": true}, {"kill": 0, "ok": true}, {"kill": 3, "ok": true}, {"kill": 4, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 2, "ok": true}, {"kill": 5, "ok": true}, {"kill": 4, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 1, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "d2": [{"kill": 3, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": true}, {"kill": 5, "ok": false}, {"kill": 5, "ok": true}, {"kill": 3, "ok": true}, {"kill": 5, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 3, "ok": true}, {"kill": 9, "ok": true}, {"kill": 5, "ok": true}, {"kill": 2, "ok": true}, {"kill": 3, "ok": true}, {"kill": 4, "ok": true}, {"kill": 8, "ok": true}, {"kill": 8, "ok": true}, {"kill": 5, "ok": true}, {"kill": 2, "ok": false}, {"kill": 2, "ok": true}, {"kill": 5, "ok": true}, {"kill": 1, "ok": true}, {"kill": 3, "ok": true}, {"kill": 8, "ok": true}, {"kill": 1, "ok": false}, {"kill": 2, "ok": true}, {"kill": 8, "ok": true}, {"kill": null, "ok": null}], "all_right": [false, true, true, true, true, false, true, true, false, true, true, false, true, true, false, false, true, false, false, true, false, false, true, true, false, true, false, true, true, false], "consensus": [2, 3, 3, 2, 4, 4, 4, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 2, 2, 5, 2, 3, 3, 4, 2, 3, 1]}, "chart2": {"current_streaks": {"a8": 0, "a9": 0, "a11": 0, "d1": 0, "d2": 0}, "max_streaks": {"a8": 13, "a9": 17, "a11": 17, "d1": 17, "d2": 17}, "accuracy_30d": {"a8": 82.8, "a9": 82.8, "a11": 73.3, "d1": 89.7, "d2": 89.7}}};
 
-// ==================== Vercel API 配置 ====================
-const API_BASE = 'https://vercel-deploy-iota-ashen.vercel.app';
-const LS_TOKEN_KEY = 'fc3d_jwt_token';
-
-// ==================== 会员系统 ====================
-const LS_USER_KEY = 'fc3d_v3_user';
+// ==================== 静态公开版 - 无需认证 ====================
 let currentUser = null;
-let isRegisterMode = false;
-let VIP_DATA = null;
 
-function loadCurrentUser() {
-    try {
-        const u = JSON.parse(localStorage.getItem(LS_USER_KEY));
-        if (u && u.email) { currentUser = u; return; }
-    } catch {}
-    currentUser = null;
-}
 
-function saveCurrentUser() {
-    if (currentUser) localStorage.setItem(LS_USER_KEY, JSON.stringify(currentUser));
-    else localStorage.removeItem(LS_USER_KEY);
-}
 
-function isVip(user) {
-    if (!user) return false;
-    return user.vip_level && user.vip_level !== 'free';
-}
 
-function getVipLevel(user) {
-    if (!user) return 0;
-    const map = { 'free': 0, 'vip1': 1, 'vip2': 2, 'admin': 99 };
-    return map[user.vip_level] || 0;
-}
-
-function getVipLevelName(level) {
-    const names = {0: '免费用户', 1: 'VIP', 2: '高级VIP', 99: '终身VIP'};
-    return names[level] || 'VIP Lv.' + level;
-}
-
-function isAdmin() {
-    return currentUser && currentUser.vip_level === 'admin';
-}
-
-// ==================== Vercel API Auth ====================
-async function doRegister(email, pwd, nick) {
-    const res = await fetch(API_BASE + '/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pwd, nickname: nick || email.split('@')[0] })
-    });
-    const data = await res.json();
-    if (!data.success) { throw new Error(data.error || '注册失败'); }
-    localStorage.setItem(LS_TOKEN_KEY, data.token);
-    currentUser = {
-        email: data.user.email,
-        nickname: data.user.nickname || nick || email.split('@')[0],
-        vip_level: data.user.vip_level || 'free'
-    };
-    saveCurrentUser();
-    return { ok: true, user: currentUser };
-}
-
-async function doLogin(email, pwd) {
-    const res = await fetch(API_BASE + '/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pwd })
-    });
-    const data = await res.json();
-    if (!data.success) { throw new Error(data.error || '登录失败'); }
-    localStorage.setItem(LS_TOKEN_KEY, data.token);
-    currentUser = {
-        email: data.user.email,
-        nickname: data.user.nickname || email.split('@')[0],
-        vip_level: data.user.vip_level || 'free'
-    };
-    saveCurrentUser();
-    return { ok: true, user: currentUser };
-}
-
-async function doLogout() {
-    currentUser = null;
-    VIP_DATA = null;
-    localStorage.removeItem(LS_TOKEN_KEY);
-    localStorage.removeItem(LS_USER_KEY);
-    refreshUI();
-}
-
-// ==================== Vercel API 用户数据 ====================
-async function fetchUserData() {
-    const token = localStorage.getItem(LS_TOKEN_KEY);
-    if (!token) { currentUser = null; return; }
-    try {
-        const res = await fetch(API_BASE + '/api/me', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        if (!res.ok) {
-            localStorage.removeItem(LS_TOKEN_KEY);
-            localStorage.removeItem(LS_USER_KEY);
-            currentUser = null;
-            return;
-        }
-        const data = await res.json();
-        if (data.success && data.user) {
-            currentUser = {
-                email: data.user.email || '',
-                nickname: data.user.nickname || '',
-                vip_level: data.user.vip_level || 'free'
-            };
-            saveCurrentUser();
-        } else {
-            localStorage.removeItem(LS_TOKEN_KEY);
-            localStorage.removeItem(LS_USER_KEY);
-            currentUser = null;
-        }
-    } catch(e) {
-        console.error('fetchUserData error:', e);
-    }
-    renderUserArea();
-    renderVipContent();
-}
 
 // ==================== VIP数据解码 ====================
 function decodeVipData() {
@@ -551,256 +374,54 @@ function decodeVipData() {
 }
 
 // ==================== UI ====================
-async function refreshUI() {
-    const token = localStorage.getItem(LS_TOKEN_KEY);
-    if (token) {
-        // Verify token and fetch user data
-        try {
-            await fetchUserData();
-        } catch(e) {
-            currentUser = null;
-            localStorage.removeItem(LS_TOKEN_KEY);
-            localStorage.removeItem(LS_USER_KEY);
-        }
-    } else {
-        // No token, clear local state
-        currentUser = null;
-        localStorage.removeItem(LS_USER_KEY);
-    }
-    renderUserArea();
+function refreshUI() {
     renderVipContent();
 }
 
-function renderUserArea() {
-    const area = document.getElementById('userArea');
-    if (!currentUser) {
-        area.innerHTML = '<button class="btn-sm" onclick="showLogin()">🔑 登录/注册</button>';
-        return;
-    }
-    const vip = isVip(currentUser);
-    const level = getVipLevel(currentUser);
-    let html = '';
-    if (vip) {
-        html += '<span class="vip-tag">' + getVipLevelName(level) + '</span>';
-    }
-    const displayName = currentUser.nickname || currentUser.email.split('@')[0];
-    html += '<span class="user-name">' + escHtml(displayName) + '</span>';
-    if (vip) {
-        html += '<span style="font-size:10px;color:var(--grn)">Lv.' + level + '</span>';
-    }
-    if (isAdmin()) {
-        html += '<button class="btn-sm" onclick="showAdminModal()" style="font-size:10px;color:var(--pur)">⚙管理</button>';
-    }
-    html += '<button class="btn-sm danger" onclick="doLogout()">退出</button>';
-    area.innerHTML = html;
-}
+function renderUserArea() { /* static version - no user area */ }
 
 function renderVipContent() {
-    const vip = isVip(currentUser);
+    // 静态公开版 - 始终显示所有内容
     const vipData = decodeVipData();
     if (!vipData) return;
 
-    // VIP Kill card overlay
-    const lockVipKill = document.getElementById('lockVipKill');
-    if (vip) {
-        document.getElementById('a9KillContent').innerHTML =
-            '<div class="kill-num">' + vipData.a9_kill + '</div><div class="kill-meta">GBDT · 置信' + (vipData.a9_proba*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
-        document.getElementById('a11KillContent').innerHTML =
-            '<div class="kill-num">' + vipData.a11_kill + '</div><div class="kill-meta">GBDT · 置信' + (vipData.a11_proba*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
-        document.getElementById('daKillContent').innerHTML =
-            '<div class="kill-num">' + vipData.d1_kill + '</div><div class="kill-meta">集成10模型 · 置信' + ((1-vipData.d1_proba)*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
-        document.getElementById('d2KillContent').innerHTML =
-            '<div class="kill-num">' + vipData.d2_kill + '</div><div class="kill-meta">集成10模型 · 置信' + ((1-vipData.d2_proba)*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
-        const jk = vipData.joint_kills;
-        document.getElementById('jointKillContent').innerHTML =
-            '<div class="joint-kills">' + jk.map(k => '<span class="kill-num">' + k + '</span>').join('') + '</div><div class="kill-meta">预测第' + NEXT_PERIOD + '期</div>';
-        lockVipKill.style.display = 'none';
-    } else {
-        document.getElementById('a9KillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
-        document.getElementById('a11KillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
-        document.getElementById('daKillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
-        document.getElementById('d2KillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
-        document.getElementById('jointKillContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
-        lockVipKill.style.display = 'flex';
+    // 高级杀码内容 - 直接显示
+    document.getElementById('a9KillContent').innerHTML =
+        '<div class="kill-num">' + vipData.a9_kill + '</div><div class="kill-meta">GBDT · 置信' + (vipData.a9_proba*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
+    document.getElementById('a11KillContent').innerHTML =
+        '<div class="kill-num">' + vipData.a11_kill + '</div><div class="kill-meta">GBDT · 置信' + (vipData.a11_proba*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
+    document.getElementById('daKillContent').innerHTML =
+        '<div class="kill-num">' + vipData.d1_kill + '</div><div class="kill-meta">集成10模型 · 置信' + ((1-vipData.d1_proba)*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
+    document.getElementById('d2KillContent').innerHTML =
+        '<div class="kill-num">' + vipData.d2_kill + '</div><div class="kill-meta">集成10模型 · 置信' + ((1-vipData.d2_proba)*100).toFixed(1) + '% · 预测第' + NEXT_PERIOD + '期</div>';
+    const jk = vipData.joint_kills;
+    document.getElementById('jointKillContent').innerHTML =
+        '<div class="joint-kills">' + jk.map(k => '<span class="kill-num">' + k + '</span>').join('') + '</div><div class="kill-meta">预测第' + NEXT_PERIOD + '期</div>';
+
+    // 6码推荐内容 - 直接显示
+    const om = vipData.omissions;
+    const sorted = Object.entries(om).sort((a,b) => b[1].miss - a[1].miss);
+    const bg = vipData.best_group;
+    const maxM = sorted[0] ? sorted[0][1].miss : 1;
+    let html = '<div class="rec-box"><div class="rec-label">⬆ 遗漏最大组推荐</div>';
+    html += '<div class="rec-codes">' + vipData.best_codes.map(c => '<div class="code-ball">' + c + '</div>').join('') + '</div>';
+    html += '<div class="rec-miss">' + bg + ' · 当前遗漏 <strong>' + vipData.best_miss + '</strong> 期</div></div>';
+    html += '<table class="om-table"><thead><tr><th>组号</th><th>6码组合</th><th>遗漏期数</th><th></th></tr></thead><tbody>';
+    for (const [name, data] of sorted) {
+        const isB = name === bg;
+        const bH = isB ? ' class="best"' : '';
+        const badge = isB ? '<span class="rec-badge">推荐</span>' : '';
+        const bW = Math.min(data.miss / maxM * 100, 100);
+        html += '<tr' + bH + '><td>' + name + '</td><td class="code-cell">' + data.codes.join(' ') + '</td>';
+        html += '<td><div class="miss-bar-c"><div class="miss-bar" style="width:' + bW + '%"></div><span class="miss-val">' + data.miss + '期</span></div></td>';
+        html += '<td>' + badge + '</td></tr>';
     }
-
-    // 6-code
-    const lockSix = document.getElementById('lockSix');
-    if (vip) {
-        const om = vipData.omissions;
-        const sorted = Object.entries(om).sort((a,b) => b[1].miss - a[1].miss);
-        const bg = vipData.best_group;
-        const maxM = sorted[0] ? sorted[0][1].miss : 1;
-        let html = '<div class="rec-box"><div class="rec-label">⬆ 遗漏最大组推荐</div>';
-        html += '<div class="rec-codes">' + vipData.best_codes.map(c => '<div class="code-ball">' + c + '</div>').join('') + '</div>';
-        html += '<div class="rec-miss">' + bg + ' · 当前遗漏 <strong>' + vipData.best_miss + '</strong> 期</div></div>';
-        html += '<table class="om-table"><thead><tr><th>组号</th><th>6码组合</th><th>遗漏期数</th><th></th></tr></thead><tbody>';
-        for (const [name, data] of sorted) {
-            const isB = name === bg;
-            const bH = isB ? ' class="best"' : '';
-            const badge = isB ? '<span class="rec-badge">推荐</span>' : '';
-            const bW = Math.min(data.miss / maxM * 100, 100);
-            html += '<tr' + bH + '><td>' + name + '</td><td class="code-cell">' + data.codes.join(' ') + '</td>';
-            html += '<td><div class="miss-bar-c"><div class="miss-bar" style="width:' + bW + '%"></div><span class="miss-val">' + data.miss + '期</span></div></td>';
-            html += '<td>' + badge + '</td></tr>';
-        }
-        html += '</tbody></table>';
-        document.getElementById('sixCodeContent').innerHTML = html;
-        lockSix.style.display = 'none';
-    } else {
-        document.getElementById('sixCodeContent').innerHTML = '<span class="kill-label" style="color:var(--org)">VIP专属功能</span>';
-        lockSix.style.display = 'flex';
-    }
+    html += '</tbody></table>';
+    document.getElementById('sixCodeContent').innerHTML = html;
 }
 
-// ==================== Modal ====================
-function showLogin() {
-    isRegisterMode = false;
-    updateModal();
-    document.getElementById('authModal').classList.add('show');
-    // 修复移动端键盘弹出遮挡输入框
-    setTimeout(function(){
-        document.querySelectorAll('#authModal input').forEach(function(el){
-            el.addEventListener('focus', function(){ 
-                var self = this;
-                setTimeout(function(){ self.scrollIntoView({block:'center', behavior:'smooth'}); }, 300);
-            });
-        });
-    }, 100);
-}
-function hideModal() { document.getElementById('authModal').classList.remove('show'); }
-
-function switchMode() {
-    isRegisterMode = !isRegisterMode;
-    updateModal();
-}
-
-function updateModal() {
-    document.getElementById('modalTitle').textContent = isRegisterMode ? '注册' : '登录';
-    document.getElementById('modalSub').textContent = isRegisterMode ? '注册账号后即可使用基础功能' : '登录后查看全部分析数据';
-    document.getElementById('authBtn').textContent = isRegisterMode ? '注册' : '登录';
-    document.getElementById('switchLink').innerHTML = isRegisterMode
-        ? '已有账号？<span onclick="switchMode()">立即登录</span>'
-        : '还没有账号？<span onclick="switchMode()">立即注册</span>';
-    const nickShow = isRegisterMode ? '' : 'none';
-    document.getElementById('nickLabel').style.display = nickShow;
-    document.getElementById('authNick').style.display = nickShow;
-    // Clear errors
-    document.querySelectorAll('.error-msg').forEach(e => e.style.display = 'none');
-}
-
-async function handleAuth() {
-    const email = document.getElementById('authEmail').value.trim();
-    const pwd = document.getElementById('authPwd').value;
-    const nick = document.getElementById('authNick').value.trim();
-    const errEl = document.getElementById('authErr');
-    errEl.style.display = 'none';
-
-    // Email validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        document.getElementById('emailErr').style.display = 'block'; return;
-    } else { document.getElementById('emailErr').style.display = 'none'; }
-
-    if (!pwd || pwd.length < 6) {
-        document.getElementById('pwdErr').textContent = '密码至少6位';
-        document.getElementById('pwdErr').style.display = 'block'; return;
-    } else { document.getElementById('pwdErr').style.display = 'none'; }
-
-    const btn = document.getElementById('authBtn');
-    btn.disabled = true; btn.textContent = '请求中...';
-
-    try {
-        if (isRegisterMode) {
-            if (!nick) { document.getElementById('nickErr').style.display = 'block'; btn.disabled = false; btn.textContent = '注册'; return; }
-            else { document.getElementById('nickErr').style.display = 'none'; }
-            const res = await doRegister(email, pwd, nick);
-            if (!res.ok) { errEl.textContent = '注册失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '注册'; return; }
-            currentUser = res.user;
-            hideModal(); refreshUI();
-        } else {
-            const res = await doLogin(email, pwd);
-            if (!res.ok) { errEl.textContent = '登录失败'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = '登录'; return; }
-            currentUser = res.user;
-            hideModal(); refreshUI();
-        }
-    } catch(e) {
-        let errMsg = e.message || '操作失败，请重试';
-        errEl.textContent = errMsg; errEl.style.display = 'block';
-        btn.disabled = false; btn.textContent = isRegisterMode ? '注册' : '登录';
-    }
-}
-
+// ==================== Modal (removed - no auth) ====================
 function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-// ==================== 管理员功能 ====================
-function showAdminModal() {
-    if (!isAdmin()) { alert('无管理员权限'); return; }
-    document.getElementById('adminModal').classList.add('show');
-    loadAdminUserList();
-}
-function closeAdminModal() { document.getElementById('adminModal').classList.remove('show'); }
-
-async function adminSetVip() {
-    const email = document.getElementById('adminUserEmail').value.trim();
-    const levelVal = parseInt(document.getElementById('adminVipLevel').value);
-    const msgEl = document.getElementById('adminMsg');
-    if (!email) { msgEl.style.color = 'var(--red)'; msgEl.textContent = '请输入用户邮箱'; return; }
-    const levelMap = { 0: 'free', 1: 'vip1', 2: 'vip2', 99: 'admin' };
-    const vip_level = levelMap[levelVal] || 'free';
-    msgEl.style.color = 'var(--t2)'; msgEl.textContent = '设置中...';
-    try {
-        const token = localStorage.getItem(LS_TOKEN_KEY);
-        const res = await fetch(API_BASE + '/api/admin/set-vip', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ email, vip_level })
-        });
-        const data = await res.json();
-        if (!data.success) {
-            msgEl.style.color = 'var(--red)'; msgEl.textContent = data.error || '设置失败'; return;
-        }
-        const levelName = getVipLevelName(levelVal);
-        msgEl.style.color = '#22c55e'; msgEl.textContent = '✅ 已将 ' + email + ' 设置为 ' + levelName;
-        loadAdminUserList();
-    } catch(e) {
-        msgEl.style.color = 'var(--red)'; msgEl.textContent = '设置失败: ' + e.message;
-    }
-}
-
-async function loadAdminUserList() {
-    const listEl = document.getElementById('adminUserList');
-    try {
-        const token = localStorage.getItem(LS_TOKEN_KEY);
-        const res = await fetch(API_BASE + '/api/admin/users', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
-        if (!data.success || !data.users || data.users.length === 0) {
-            listEl.innerHTML = '<div style="text-align:center;color:var(--t3)">暂无用户</div>'; return;
-        }
-        let html = '<table style="width:100%;border-collapse:collapse">';
-        html += '<tr style="border-bottom:1px solid var(--bd)"><th style="text-align:left;padding:4px">邮箱</th><th style="padding:4px">等级</th><th style="padding:4px">注册时间</th></tr>';
-        data.users.forEach(u => {
-            const levelNum = getVipLevel(u);
-            const levelColor = levelNum > 0 ? 'var(--org)' : 'var(--t3)';
-            const createdStr = u.created_at || '';
-            const regTime = createdStr ? new Date(createdStr).toLocaleDateString('zh-CN') : '-';
-            html += '<tr style="border-bottom:1px solid rgba(42,53,85,.3)">';
-            html += '<td style="padding:4px;font-size:11px;word-break:break-all">' + (u.email || '-') + '</td>';
-            html += '<td style="padding:4px;text-align:center;color:' + levelColor + ';font-weight:600">' + getVipLevelName(levelNum) + '</td>';
-            html += '<td style="padding:4px;text-align:center">' + regTime + '</td>';
-            html += '</tr>';
-        });
-        html += '</table>';
-        listEl.innerHTML = html;
-    } catch(e) {
-        listEl.innerHTML = '<div style="color:var(--red)">加载失败: ' + e.message + '</div>';
-    }
-}
-
 
 // ==================== 历史弹窗 ====================
 var histType = '', histShown = 0;
@@ -819,8 +440,7 @@ function loadHistPage() {
     var total = PUB_HISTORY.length;
     var start = Math.max(0, total - histShown - HIST_PAGE);
     var end = total - histShown;
-    var vip = isVip(currentUser);
-    var vipData = vip ? decodeVipData() : null;
+    var vipData = decodeVipData();
     var h = '<table class="hist-tbl"><thead>';
     if (histType === 'a8') {
         h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>A8杀码</th><th>结果</th></tr></thead><tbody>';
@@ -836,11 +456,7 @@ function loadHistPage() {
         h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>A9</th><th></th><th>A11</th><th></th><th>D1</th><th></th><th>D2</th><th></th></tr></thead><tbody>';
         for (var i = end - 1; i >= start; i--) {
             var it = PUB_HISTORY[i];
-            if (!vip || !vipData || !vipData.history_vip || i >= vipData.history_vip.length) {
-                h += '<tr><td>' + it.period.slice(-3) + '</td><td>' + (it.date||'').slice(5) + '</td>';
-                h += '<td><span class="draw-num">' + it.draw + '</span></td>';
-                h += '<td colspan="8" style="color:var(--org);font-size:10px">🔒 VIP查看</td></tr>';
-            } else {
+            if (vipData && vipData.history_vip && i < vipData.history_vip.length) {
                 var v = vipData.history_vip[i];
                 var a9m = v.a9o ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
                 var a11m = v.a11o ? '<span class="ok-m">✅</span>' : '<span class="er-m">❌</span>';
@@ -856,9 +472,7 @@ function loadHistPage() {
         }
     } else if (histType === 'six') {
         h += '<tr><th>期号</th><th>日期</th><th>开奖</th><th>推荐组</th><th>6码</th><th>结果</th></tr></thead><tbody>';
-        if (!vip || !vipData || !vipData.six_history) {
-            h += '<tr><td colspan="6" style="color:var(--org);font-size:11px">🔒 VIP解锁查看6码历史</td></tr>';
-        } else {
+        if (vipData && vipData.six_history) {
             var sh = vipData.six_history;
             var sS = Math.max(0, sh.length - histShown - HIST_PAGE);
             var sE = Math.min(sh.length, sh.length - histShown);
@@ -886,7 +500,7 @@ function loadHistPage() {
     body.innerHTML = h;
     histShown += (end - start);
     var btn = document.getElementById('histLoadBtn');
-    var maxI = histType === 'six' ? (vip && vipData && vipData.six_history ? vipData.six_history.length : 0) : total;
+    var maxI = histType === 'six' ? (vipData && vipData.six_history ? vipData.six_history.length : 0) : total;
     if (histShown >= maxI) { btn.disabled = true; btn.textContent = '已显示全部（共' + maxI + '期）'; }
     else { btn.disabled = false; btn.textContent = '加载更多（剩余' + (maxI - histShown) + '期）'; }
 }
