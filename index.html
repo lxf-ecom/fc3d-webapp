@@ -277,23 +277,20 @@ var HIST_PAGE = 20;
 
 // ==================== 数据加载 ====================
 function loadData() {
-    document.getElementById('loadingScreen').style.display = 'flex';
+    document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('errorScreen').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
 
     try {
         var d = window.__EMBED_DATA__;
         DATA = d;
-        document.getElementById('loadingScreen').style.display = 'none';
         renderAll();
     } catch(e) {
         console.error('Render error:', e);
         document.getElementById('loadingScreen').style.display = 'none';
         document.getElementById('errorScreen').style.display = 'flex';
-    }            console.error('Load error:', e);
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('errorScreen').style.display = 'flex';
-        });
+        document.getElementById('mainContent').style.display = 'none';
+    }
 }
 
 // ==================== 渲染入口 ====================
